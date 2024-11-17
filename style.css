@@ -1,0 +1,72 @@
+/* Global body styles */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Main app container */
+#app {
+    padding: 20px;
+}
+
+/* Header styles */
+h1 {
+    color: #333;
+}
+
+/* Player cards container */
+#player-cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Individual player card */
+.player-card {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: 250px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+/* Player card heading */
+.player-card h2 {
+    font-size: 20px;
+    margin: 0 0 10px;
+}
+
+/* Player card paragraph styles */
+.player-card p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+/* Button styles */
+.button-select {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Button hover styles */
+.button-select:hover {
+    background-color: #0056b3;
+}
+
+/* Rectangular image styling */
+.headshot {
+    width: 120px;  /* You can adjust the width */
+    height: 150px; /* You can adjust the height */
+    object-fit: cover;  /* Ensures the image doesn't stretch */
+    margin-bottom: 10px;
+}
