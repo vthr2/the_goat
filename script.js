@@ -2,11 +2,13 @@ let players = [];
 let selectedPlayers = []; // To track selected players
 let displayedPlayers = []; // To store the displayed random players
 
+// Fetch player data and display the random players
 fetch('nba_player_data.csv')
   .then(response => response.text())
   .then(data => {
     players = parseCSV(data);
     displayRandomPlayers();
+    updateRankingsDisplay(); // Update rankings when data is loaded
   })
   .catch(error => console.error('Error loading player data:', error));
 
@@ -68,6 +70,7 @@ function displayRandomPlayers() {
   });
 }
 
+// Function to handle player selection and update ELO
 function onPlayerSelect(selectedIndex) {
   // Use the stored displayed players
   const winner = displayedPlayers[selectedIndex];  // The selected player is the winner
@@ -95,6 +98,7 @@ function onPlayerSelect(selectedIndex) {
     // Clear the selected players and display new random players
     selectedPlayers = [];
     displayRandomPlayers();  // Load new players
+    updateRankingsDisplay(); // Update rankings after each ELO change
   })
   .catch(error => {
     console.error('Error updating ELO:', error);
@@ -102,12 +106,15 @@ function onPlayerSelect(selectedIndex) {
   });
 }
 
+// Function to display the rankings on the scoreboard
 function updateRankingsDisplay() {
-  fetch('/rankings')
+  fetch('http://127.0.0.1:5000/rankings')
     .then(response => response.json())
     .then(rankings => {
       const rankingsDiv = document.getElementById('rankings');
-      rankingsDiv.innerHTML = ''; // Clear previous rankings
+      const rankingsList = rankingsDiv.querySelector('div') || document.createElement('div');
+      rankingsDiv.appendChild(rankingsList);
+      rankingsList.innerHTML = ''; // Clear previous rankings
 
       rankings.forEach(player => {
         const playerDiv = document.createElement('div');
@@ -116,8 +123,11 @@ function updateRankingsDisplay() {
           <h3>${player[0]}</h3> <!-- Player name -->
           <p>ELO: ${player[1].toFixed(0)}</p> <!-- ELO rating -->
         `;
-        rankingsDiv.appendChild(playerDiv);
+        rankingsList.appendChild(playerDiv);
       });
     })
     .catch(error => console.error('Error fetching rankings:', error));
 }
+
+// Call this function to update rankings after ELO update or page load
+updateRankingsDisplay();

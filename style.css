@@ -15,6 +15,8 @@ body {
 /* Header styles */
 h1 {
     color: #333;
+    font-size: 36px;
+    margin-bottom: 20px;
 }
 
 /* Player cards container */
@@ -65,8 +67,67 @@ h1 {
 
 /* Rectangular image styling */
 .headshot {
-    width: 120px;  /* You can adjust the width */
-    height: 150px; /* You can adjust the height */
-    object-fit: cover;  /* Ensures the image doesn't stretch */
+    width: 120px;
+    height: 150px;
+    object-fit: cover;
     margin-bottom: 10px;
+}
+
+/* Rankings section styles */
+#rankings {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Rankings title */
+#rankings h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Player ranking entry */
+.ranking-player {
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ranking-player h3 {
+    font-size: 18px;
+    margin: 0;
+    color: #333;
+}
+
+.ranking-player p {
+    font-size: 16px;
+    margin: 0;
+    color: #666;
+}
+
+.ranking-player:hover {
+    background-color: #e0f7fa;
+}
+
+/* Highlight top player */
+.ranking-player:first-child {
+    background-color: #ffeb3b;
+    font-weight: bold;
+}
+
+.ranking-player:first-child h3 {
+    color: #222;
 }
