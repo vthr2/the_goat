@@ -1,5 +1,6 @@
-// Fetch the CSV file and parse the data
 let players = [];
+let selectedPlayers = []; // To track selected players
+let displayedPlayers = []; // To store the displayed random players
 
 fetch('nba_player_data.csv')
   .then(response => response.text())
@@ -20,6 +21,7 @@ function parseCSV(data) {
   const avgPpgIndex = headers.indexOf('avg_ppg');
   const avgRpgIndex = headers.indexOf('avg_rpg');
   const avgApgIndex = headers.indexOf('avg_apg');
+  const headshotIndex = headers.indexOf('headshot'); // Get the index of the headshot column
 
   // Parse each row into an object
   return dataRows.map(row => {
@@ -29,6 +31,7 @@ function parseCSV(data) {
       avg_ppg: parseFloat(columns[avgPpgIndex]) || 0, // Default to 0 if value is missing
       avg_rpg: parseFloat(columns[avgRpgIndex]) || 0,
       avg_apg: parseFloat(columns[avgApgIndex]) || 0,
+      headshot: columns[headshotIndex]?.trim(), // Get the headshot URL
     };
   });
 }
@@ -44,24 +47,77 @@ function displayRandomPlayers() {
   const playerCardsDiv = document.getElementById('player-cards');
   playerCardsDiv.innerHTML = ''; // Clear previous cards
 
-  const [player1, player2] = getRandomPlayers();
+  displayedPlayers = getRandomPlayers(); // Store the displayed players
 
-  [player1, player2].forEach((player, index) => {
+  [displayedPlayers[0], displayedPlayers[1]].forEach((player, index) => {
     const card = document.createElement('div');
     card.className = 'player-card';
     card.innerHTML = `
-      <h2>${player.name}</h2>
-      <p><strong>PPG:</strong> ${player.avg_ppg.toFixed(1)}</p>
-      <p><strong>APG:</strong> ${player.avg_apg.toFixed(1)}</p>
-      <p><strong>RPG:</strong> ${player.avg_rpg.toFixed(1)}</p>
-      <button class="button-select" onclick="onPlayerSelect(${index})">Select</button>
+      <div class="card-content">
+        <img src="${player.headshot}" alt="${player.name}" class="headshot">
+        <div class="info">
+          <h2>${player.name}</h2>
+          <p><strong>PPG:</strong> ${player.avg_ppg.toFixed(1)}</p>
+          <p><strong>APG:</strong> ${player.avg_apg.toFixed(1)}</p>
+          <p><strong>RPG:</strong> ${player.avg_rpg.toFixed(1)}</p>
+        </div>
+        <button class="button-select" onclick="onPlayerSelect(${index})">Select</button>
+      </div>
     `;
     playerCardsDiv.appendChild(card);
   });
 }
 
-// Function to handle player selection
 function onPlayerSelect(selectedIndex) {
-  alert(`You selected Player ${selectedIndex + 1}`);
-  displayRandomPlayers(); // Load new players
+  // Use the stored displayed players
+  const winner = displayedPlayers[selectedIndex];  // The selected player is the winner
+  const loser = displayedPlayers[selectedIndex === 0 ? 1 : 0];  // The unselected player is the loser
+  
+  // Now add both players to the selectedPlayers array
+  selectedPlayers = [winner, loser];
+
+  // Send the ELO update request
+  fetch('http://127.0.0.1:5000/update-elo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      winnerName: winner.name,
+      loserName: loser.name,
+    }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('ELO updated successfully:', data);
+    alert(`ELO updated: ${winner.name} (Winner) and ${loser.name} (Loser)`);
+
+    // Clear the selected players and display new random players
+    selectedPlayers = [];
+    displayRandomPlayers();  // Load new players
+  })
+  .catch(error => {
+    console.error('Error updating ELO:', error);
+    alert('Error updating ELO.');
+  });
+}
+
+function updateRankingsDisplay() {
+  fetch('/rankings')
+    .then(response => response.json())
+    .then(rankings => {
+      const rankingsDiv = document.getElementById('rankings');
+      rankingsDiv.innerHTML = ''; // Clear previous rankings
+
+      rankings.forEach(player => {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'ranking-player';
+        playerDiv.innerHTML = `
+          <h3>${player[0]}</h3> <!-- Player name -->
+          <p>ELO: ${player[1].toFixed(0)}</p> <!-- ELO rating -->
+        `;
+        rankingsDiv.appendChild(playerDiv);
+      });
+    })
+    .catch(error => console.error('Error fetching rankings:', error));
 }
