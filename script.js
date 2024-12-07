@@ -4,6 +4,7 @@ let showAdvancedStats = false;
 let showCareerHighs = false;
 let selectedPlayers = [];
 
+
 // Fetch player data and display random players
 fetch('nba_player_data.csv')
   .then(response => response.text())
@@ -56,20 +57,48 @@ function parseCSV(data) {
   });
 }
 
-// Function to select two random players
-function getRandomPlayers() {
-  const shuffled = [...players].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 2);
+// Function to check if an image URL is valid
+function isImageValid(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(true);  // Image loaded successfully
+    img.onerror = () => resolve(false);  // Image failed to load
+    img.src = url;
+  });
 }
 
-// Function to display two random players
-function displayRandomPlayers(shuffle = true) {
-  const playerCardsDiv = document.getElementById('player-cards');
-  playerCardsDiv.innerHTML = '';
-  if (shuffle) {
-    displayedPlayers = getRandomPlayers();
+// Function to select two random players and check if their images are valid
+async function getRandomPlayers() {
+  let validPlayers = [];
+  
+  // Loop until we have 2 valid players
+  while (validPlayers.length < 2) {
+    // Select a random player
+    const randomPlayer = players[Math.floor(Math.random() * players.length)];
+    
+    // Check if the image is valid
+    const isValid = await isImageValid(randomPlayer.headshot);
+    
+    if (isValid) {
+      // If the image is valid, add the player to the list
+      validPlayers.push(randomPlayer);
+    }
   }
 
+  return validPlayers;
+}
+
+// Function to display two random players (with optional shuffling)
+async function displayRandomPlayers(shuffle = true) {
+  const playerCardsDiv = document.getElementById('player-cards');
+  playerCardsDiv.innerHTML = '';
+
+  // Only fetch new random players if shuffle is true or displayedPlayers is empty
+  if (shuffle || displayedPlayers.length === 0) {
+    displayedPlayers = await getRandomPlayers();  
+  }
+
+  // Now we can display the stats without fetching new players
   displayedPlayers.forEach((player, index) => {
     const card = document.createElement('div');
     card.className = 'player-card';
@@ -127,6 +156,7 @@ function displayRandomPlayers(shuffle = true) {
     playerCardsDiv.appendChild(card);
   });
 
+  // Toggle buttons to change views
   const toggleStatsButton = document.createElement('button');
   toggleStatsButton.className = 'toggle-button';
   toggleStatsButton.innerText = showAdvancedStats ? 'Show Regular Stats' : 'Show Advanced Stats';
@@ -172,7 +202,6 @@ function onPlayerSelect(selectedIndex) {
     .then(response => response.json())
     .then(data => {
       console.log('ELO updated successfully:', data);
-      alert(`ELO updated: ${winner.name} (Winner) and ${loser.name} (Loser)`);
 
       selectedPlayers = [];
       displayRandomPlayers();
