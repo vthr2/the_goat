@@ -1,85 +1,164 @@
 let players = [];
-let selectedPlayers = []; // To track selected players
-let displayedPlayers = []; // To store the displayed random players
+let displayedPlayers = [];
+let showAdvancedStats = false;
+let showCareerHighs = false;
+let selectedPlayers = [];
 
-// Fetch player data and display the random players
+// Fetch player data and display random players
 fetch('nba_player_data.csv')
   .then(response => response.text())
   .then(data => {
     players = parseCSV(data);
-    displayRandomPlayers();
+    displayRandomPlayers(); // Initial display of random players
     updateRankingsDisplay(); // Update rankings when data is loaded
   })
   .catch(error => console.error('Error loading player data:', error));
 
-// Function to parse CSV into an array of objects
+// Parse CSV into an array of objects
 function parseCSV(data) {
   const rows = data.split('\n');
   const headers = rows[0].split(',').map(header => header.trim()); // Get headers from the first row
   const dataRows = rows.slice(1).filter(row => row.trim() !== ''); // Exclude the header and empty rows
 
-  // Get column indices based on column names
-  const nameIndex = headers.indexOf('name');
-  const avgPpgIndex = headers.indexOf('avg_ppg');
-  const avgRpgIndex = headers.indexOf('avg_rpg');
-  const avgApgIndex = headers.indexOf('avg_apg');
-  const headshotIndex = headers.indexOf('headshot'); // Get the index of the headshot column
+  const indices = headers.reduce((acc, header, index) => {
+    acc[header] = index;
+    return acc;
+  }, {});
 
-  // Parse each row into an object
   return dataRows.map(row => {
     const columns = row.split(',');
     return {
-      name: columns[nameIndex]?.trim(),
-      avg_ppg: parseFloat(columns[avgPpgIndex]) || 0, // Default to 0 if value is missing
-      avg_rpg: parseFloat(columns[avgRpgIndex]) || 0,
-      avg_apg: parseFloat(columns[avgApgIndex]) || 0,
-      headshot: columns[headshotIndex]?.trim(), // Get the headshot URL
+      name: columns[indices['name']]?.trim(),
+      avg_ppg: parseFloat(columns[indices['avg_ppg']]) || 0,
+      max_ppg: parseFloat(columns[indices['max_ppg']]) || 0,
+      avg_rpg: parseFloat(columns[indices['avg_rpg']]) || 0,
+      max_rpg: parseFloat(columns[indices['max_rpg']]) || 0,
+      avg_apg: parseFloat(columns[indices['avg_apg']]) || 0,
+      max_apg: parseFloat(columns[indices['max_apg']]) || 0,
+      field_goal_percentage: parseFloat(columns[indices['field_goal_percentage']]) || 0,
+      max_fgp: parseFloat(columns[indices['max_fgp']]) || 0,
+      three_point_percentage: parseFloat(columns[indices['three_point_percentage']]) || 0,
+      max_3pp: parseFloat(columns[indices['max_3pp']]) || 0,
+      Average_PER: parseFloat(columns[indices['Average_PER']]) || 0,
+      Max_PER: parseFloat(columns[indices['Max_PER']]) || 0,
+      Average_TS: parseFloat(columns[indices['Average_TS']]) || 0,
+      Max_TS: parseFloat(columns[indices['Max_TS']]) || 0,
+      Average_VORP: parseFloat(columns[indices['Average_VORP']]) || 0,
+      Max_VORP: parseFloat(columns[indices['Max_VORP']]) || 0,
+      Average_OBP: parseFloat(columns[indices['Average_OBP']]) || 0,
+      Max_OBP: parseFloat(columns[indices['Max_OBP']]) || 0,
+      Average_DBP: parseFloat(columns[indices['Average_DBP']]) || 0,
+      Max_DBP: parseFloat(columns[indices['Max_DBP']]) || 0,
+      Average_Win_shares: parseFloat(columns[indices['Average_Win_shares']]) || 0,
+      Max_Win_shares: parseFloat(columns[indices['Max_Win_shares']]) || 0,
+      headshot: columns[indices['headshot']]?.trim(),
     };
   });
 }
 
 // Function to select two random players
 function getRandomPlayers() {
-  const shuffled = players.sort(() => 0.5 - Math.random());
+  const shuffled = [...players].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, 2);
 }
 
 // Function to display two random players
-function displayRandomPlayers() {
+function displayRandomPlayers(shuffle = true) {
   const playerCardsDiv = document.getElementById('player-cards');
-  playerCardsDiv.innerHTML = ''; // Clear previous cards
+  playerCardsDiv.innerHTML = '';
+  if (shuffle) {
+    displayedPlayers = getRandomPlayers();
+  }
 
-  displayedPlayers = getRandomPlayers(); // Store the displayed players
-
-  [displayedPlayers[0], displayedPlayers[1]].forEach((player, index) => {
+  displayedPlayers.forEach((player, index) => {
     const card = document.createElement('div');
     card.className = 'player-card';
+
+    const statsToShow = showCareerHighs ? {
+      ppg: player.max_ppg,
+      rpg: player.max_rpg,
+      apg: player.max_apg,
+      fgp: player.max_fgp,
+      tpp: player.max_3pp,
+      PER: player.Max_PER,
+      TS: player.Max_TS,
+      VORP: player.Max_VORP,
+      OBP: player.Max_OBP,
+      DBP: player.Max_DBP,
+      WinShares: player.Max_Win_shares
+    } : {
+      ppg: player.avg_ppg,
+      rpg: player.avg_rpg,
+      apg: player.avg_apg,
+      fgp: player.field_goal_percentage,
+      tpp: player.three_point_percentage,
+      PER: player.Average_PER,
+      TS: player.Average_TS,
+      VORP: player.Average_VORP,
+      OBP: player.Average_OBP,
+      DBP: player.Average_DBP,
+      WinShares: player.Average_Win_shares
+    };
+
     card.innerHTML = `
       <div class="card-content">
         <img src="${player.headshot}" alt="${player.name}" class="headshot">
         <div class="info">
           <h2>${player.name}</h2>
-          <p><strong>PPG:</strong> ${player.avg_ppg.toFixed(1)}</p>
-          <p><strong>APG:</strong> ${player.avg_apg.toFixed(1)}</p>
-          <p><strong>RPG:</strong> ${player.avg_rpg.toFixed(1)}</p>
+          ${showAdvancedStats ? `
+          <p><strong>PER:</strong> ${statsToShow.PER.toFixed(1)}</p>
+          <p><strong>Win Shares:</strong> ${statsToShow.WinShares.toFixed(1)}</p>
+          <p><strong>OBP:</strong> ${statsToShow.OBP.toFixed(1)}</p>
+          <p><strong>DBP:</strong> ${statsToShow.DBP.toFixed(1)}</p>
+          <p><strong>VORP:</strong> ${statsToShow.VORP.toFixed(1)}</p>
+          <p><strong>TS%:</strong> ${(statsToShow.TS * 100).toFixed(1)}%</p>
+          ` : `
+          <p><strong>PPG:</strong> ${statsToShow.ppg.toFixed(1)}</p>
+          <p><strong>APG:</strong> ${statsToShow.apg.toFixed(1)}</p>
+          <p><strong>RPG:</strong> ${statsToShow.rpg.toFixed(1)}</p>
+          <p><strong>FG%:</strong> ${(statsToShow.fgp * 100).toFixed(1)}%</p>
+          <p><strong>3P%:</strong> ${(statsToShow.tpp * 100).toFixed(1)}%</p>
+          `}
         </div>
         <button class="button-select" onclick="onPlayerSelect(${index})">Select</button>
       </div>
     `;
+
     playerCardsDiv.appendChild(card);
   });
+
+  const toggleStatsButton = document.createElement('button');
+  toggleStatsButton.className = 'toggle-button';
+  toggleStatsButton.innerText = showAdvancedStats ? 'Show Regular Stats' : 'Show Advanced Stats';
+  toggleStatsButton.onclick = toggleStatsView;
+  playerCardsDiv.appendChild(toggleStatsButton);
+
+  const toggleHighsButton = document.createElement('button');
+  toggleHighsButton.className = 'toggle-button';
+  toggleHighsButton.innerText = showCareerHighs ? 'Show Career Averages' : 'Show Career Highs';
+  toggleHighsButton.onclick = toggleCareerHighs;
+  playerCardsDiv.appendChild(toggleHighsButton);
+}
+
+// Function to toggle between regular and advanced stats
+function toggleStatsView() {
+  showAdvancedStats = !showAdvancedStats;
+  displayRandomPlayers(false);
+}
+
+// Function to toggle between career highs and averages
+function toggleCareerHighs() {
+  showCareerHighs = !showCareerHighs;
+  displayRandomPlayers(false);
 }
 
 // Function to handle player selection and update ELO
 function onPlayerSelect(selectedIndex) {
-  // Use the stored displayed players
-  const winner = displayedPlayers[selectedIndex];  // The selected player is the winner
-  const loser = displayedPlayers[selectedIndex === 0 ? 1 : 0];  // The unselected player is the loser
-  
-  // Now add both players to the selectedPlayers array
+  const winner = displayedPlayers[selectedIndex];
+  const loser = displayedPlayers[selectedIndex === 0 ? 1 : 0];
+
   selectedPlayers = [winner, loser];
 
-  // Send the ELO update request
   fetch('http://127.0.0.1:5000/update-elo', {
     method: 'POST',
     headers: {
@@ -90,44 +169,59 @@ function onPlayerSelect(selectedIndex) {
       loserName: loser.name,
     }),
   })
-  .then(response => response.json())
-  .then(data => {
-    console.log('ELO updated successfully:', data);
-    alert(`ELO updated: ${winner.name} (Winner) and ${loser.name} (Loser)`);
+    .then(response => response.json())
+    .then(data => {
+      console.log('ELO updated successfully:', data);
+      alert(`ELO updated: ${winner.name} (Winner) and ${loser.name} (Loser)`);
 
-    // Clear the selected players and display new random players
-    selectedPlayers = [];
-    displayRandomPlayers();  // Load new players
-    updateRankingsDisplay(); // Update rankings after each ELO change
-  })
-  .catch(error => {
-    console.error('Error updating ELO:', error);
-    alert('Error updating ELO.');
-  });
+      selectedPlayers = [];
+      displayRandomPlayers();
+      updateRankingsDisplay();
+    })
+    .catch(error => {
+      console.error('Error updating ELO:', error);
+      alert('Error updating ELO.');
+    });
 }
 
-// Function to display the rankings on the scoreboard
+// Function to update and show rankings in the 'Rankings' tab
 function updateRankingsDisplay() {
   fetch('http://127.0.0.1:5000/rankings')
     .then(response => response.json())
     .then(rankings => {
-      const rankingsDiv = document.getElementById('rankings');
-      const rankingsList = rankingsDiv.querySelector('div') || document.createElement('div');
-      rankingsDiv.appendChild(rankingsList);
-      rankingsList.innerHTML = ''; // Clear previous rankings
+      const rankingsDiv = document.getElementById('rankings-list');
+      rankingsDiv.innerHTML = '';
 
       rankings.forEach(player => {
         const playerDiv = document.createElement('div');
         playerDiv.className = 'ranking-player';
         playerDiv.innerHTML = `
-          <h3>${player[0]}</h3> <!-- Player name -->
-          <p>ELO: ${player[1].toFixed(0)}</p> <!-- ELO rating -->
+          <h3>${player[0]}</h3>
+          <p>ELO: ${player[1].toFixed(0)}</p>
         `;
-        rankingsList.appendChild(playerDiv);
+        rankingsDiv.appendChild(playerDiv);
       });
     })
     .catch(error => console.error('Error fetching rankings:', error));
 }
 
-// Call this function to update rankings after ELO update or page load
-updateRankingsDisplay();
+// Switch between tabs
+function switchTab(tabName) {
+  // Hide all tab content
+  const tabs = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  // Show the selected tab
+  const activeTab = document.getElementById(tabName);
+  activeTab.classList.add('active');
+
+  // Update the active tab link
+  const links = document.querySelectorAll('nav a');
+  links.forEach(link => link.classList.remove('active'));
+  
+  // Activate the clicked tab link
+  const activeLink = document.querySelector(`a[href='#'][onclick="switchTab('${tabName}')"]`);
+  if (activeLink) {
+    activeLink.classList.add('active');
+  }
+}

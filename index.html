@@ -3,22 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NBA Player Comparison</title>
-  <link rel="stylesheet" href="style.css"> <!-- Link to your external CSS file -->
+  <title>NBA Player Showdown</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
+  <header>
     <h1>NBA Player Showdown</h1>
-    
-    <!-- Section for the player comparison cards -->
-    <div id="player-cards">
-      <!-- Player cards will be dynamically inserted here -->
+  </header>
+
+  <nav>
+    <a href="#" onclick="switchTab('player-showdown')" class="active">Player Showdown</a>
+    <a href="#" onclick="switchTab('elo-rankings')">ELO Rankings</a>
+  </nav>
+
+  <div class="container">
+    <!-- Player Showdown Tab -->
+    <div id="player-showdown" class="tab-content active">
+      <h2>Choose your winner!</h2>
+      <div id="player-cards"></div>
     </div>
 
-    <!-- Section for the scoreboard -->
-    <div id="rankings">
-      <h2>Current ELO Rankings</h2>
-      <!-- Rankings will be dynamically inserted here -->
+    <!-- ELO Rankings Tab -->
+    <div id="elo-rankings" class="tab-content">
+      <h2>ELO Rankings</h2>
+      <div id="rankings-list"></div>
     </div>
   </div>
 

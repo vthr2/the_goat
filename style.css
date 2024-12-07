@@ -1,7 +1,6 @@
 /* Global body styles */
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
+    font-family: 'Arial', sans-serif;
     background-color: #f4f4f9;
     margin: 0;
     padding: 0;
@@ -13,10 +12,43 @@ body {
 }
 
 /* Header styles */
+header {
+    text-align: center;
+}
+
 h1 {
     color: #333;
     font-size: 36px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+/* Navigation styles */
+nav ul {
+    display: flex;
+    justify-content: center;
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+nav ul li {
+    margin: 0 20px;
+}
+
+nav a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 18px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+nav a:hover {
+    color: #0056b3;
+}
+
+nav a.active {
+    color: #ff5722;
 }
 
 /* Player cards container */
@@ -24,6 +56,7 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 20px;
+    margin-top: 20px;
 }
 
 /* Individual player card */
@@ -34,43 +67,60 @@ h1 {
     padding: 20px;
     width: 250px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: left;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.player-card:hover {
+    transform: scale(1.05);
 }
 
 /* Player card heading */
 .player-card h2 {
     font-size: 20px;
-    margin: 0 0 10px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Centered image and stats */
+.headshot {
+    width: 120px;
+    height: 150px;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Player card paragraph styles */
 .player-card p {
     margin: 5px 0;
     font-size: 16px;
+    color: #666;
 }
 
 /* Button styles */
 .button-select {
     background-color: #007bff;
     color: white;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
-/* Button hover styles */
 .button-select:hover {
     background-color: #0056b3;
-}
-
-/* Rectangular image styling */
-.headshot {
-    width: 120px;
-    height: 150px;
-    object-fit: cover;
-    margin-bottom: 10px;
+    transform: scale(1.1);
 }
 
 /* Rankings section styles */
@@ -87,14 +137,12 @@ h1 {
     margin-right: auto;
 }
 
-/* Rankings title */
 #rankings h2 {
     font-size: 24px;
     color: #333;
     margin-bottom: 20px;
 }
 
-/* Player ranking entry */
 .ranking-player {
     background-color: #f9f9f9;
     padding: 15px;
@@ -108,13 +156,11 @@ h1 {
 
 .ranking-player h3 {
     font-size: 18px;
-    margin: 0;
     color: #333;
 }
 
 .ranking-player p {
     font-size: 16px;
-    margin: 0;
     color: #666;
 }
 
@@ -122,7 +168,6 @@ h1 {
     background-color: #e0f7fa;
 }
 
-/* Highlight top player */
 .ranking-player:first-child {
     background-color: #ffeb3b;
     font-weight: bold;
@@ -130,4 +175,14 @@ h1 {
 
 .ranking-player:first-child h3 {
     color: #222;
+}
+
+/* Tab content styles */
+.tab-content {
+    display: none;
+}
+
+/* Active tab content */
+.tab-content.active {
+    display: block;
 }
