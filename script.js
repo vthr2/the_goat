@@ -192,11 +192,24 @@ function updateRankingsDisplay() {
       const rankingsDiv = document.getElementById('rankings-list');
       rankingsDiv.innerHTML = '';
 
-      rankings.forEach(player => {
+      rankings.forEach((player, index) => {
         const playerDiv = document.createElement('div');
         playerDiv.className = 'ranking-player';
+
+        let medalIcon = '';
+        let goatIcon = '';
+        
+        if (index === 0) {
+          goatIcon = '<span class="goat">🐐</span>';
+          medalIcon = '<span class="medal">🥇</span>';
+        } else if (index === 1) {
+          medalIcon = '<span class="medal second">🥈</span>';
+        } else if (index === 2) {
+          medalIcon = '<span class="medal third">🥉</span>';
+        }
+
         playerDiv.innerHTML = `
-          <h3>${player[0]}</h3>
+          <h3>${goatIcon}${medalIcon}${player[0]}</h3>
           <p>ELO: ${player[1].toFixed(0)}</p>
         `;
         rankingsDiv.appendChild(playerDiv);
