@@ -241,10 +241,27 @@ nav a.active {
     font-size: 16px;
     margin-top: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.2s;
+    width: auto;
 }
 
 .toggle-button:hover {
     background-color: #dcdcdc;
 }
 
+.toggle-button.active {
+    background-color: #ff5722;
+    color: white;
+}
+
+/* Spacing and layout for the toggle button */
+#game-mode-toggle {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+#game-mode-toggle .toggle-button {
+    margin-bottom: 20px;
+}

@@ -3,7 +3,8 @@ let displayedPlayers = [];
 let showAdvancedStats = false;
 let showCareerHighs = false;
 let selectedPlayers = [];
-
+let winnerStays = true;
+let winner;
 
 // Fetch player data and display random players
 fetch('nba_player_data.csv')
@@ -70,17 +71,22 @@ function isImageValid(url) {
 // Function to select two random players and check if their images are valid
 async function getRandomPlayers() {
   let validPlayers = [];
-  
-  // Loop until we have 2 valid players
+
+  if (winnerStays && winner) {
+    validPlayers.push(winner); // Add the previous winner
+  }
+
+  // Keep fetching players until you have enough for the round
   while (validPlayers.length < 2) {
-    // Select a random player
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
-    
-    // Check if the image is valid
+
+    // Ensure no duplicates
+    if (validPlayers.some(p => p.name === randomPlayer.name)) {
+      continue;
+    }
+
     const isValid = await isImageValid(randomPlayer.headshot);
-    
     if (isValid) {
-      // If the image is valid, add the player to the list
       validPlayers.push(randomPlayer);
     }
   }
@@ -182,12 +188,11 @@ function toggleCareerHighs() {
   displayRandomPlayers(false);
 }
 
-// Function to handle player selection and update ELO
 function onPlayerSelect(selectedIndex) {
-  const winner = displayedPlayers[selectedIndex];
+  const currentWinner = displayedPlayers[selectedIndex];
   const loser = displayedPlayers[selectedIndex === 0 ? 1 : 0];
 
-  selectedPlayers = [winner, loser];
+  selectedPlayers = [currentWinner, loser];
 
   fetch('http://127.0.0.1:5000/update-elo', {
     method: 'POST',
@@ -195,13 +200,20 @@ function onPlayerSelect(selectedIndex) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      winnerName: winner.name,
+      winnerName: currentWinner.name,
       loserName: loser.name,
     }),
   })
     .then(response => response.json())
     .then(data => {
       console.log('ELO updated successfully:', data);
+
+      // Update winner for the next round if "winner stays" mode is active
+      if (winnerStays) {
+        winner = currentWinner;
+      } else {
+        winner = null;
+      }
 
       selectedPlayers = [];
       displayRandomPlayers();
@@ -212,6 +224,7 @@ function onPlayerSelect(selectedIndex) {
       alert('Error updating ELO.');
     });
 }
+
 
 // Function to update and show rankings in the 'Rankings' tab
 function updateRankingsDisplay() {
@@ -230,7 +243,6 @@ function updateRankingsDisplay() {
         
         if (index === 0) {
           goatIcon = '<span class="goat">🐐</span>';
-          medalIcon = '<span class="medal">🥇</span>';
         } else if (index === 1) {
           medalIcon = '<span class="medal second">🥈</span>';
         } else if (index === 2) {
@@ -246,6 +258,23 @@ function updateRankingsDisplay() {
     })
     .catch(error => console.error('Error fetching rankings:', error));
 }
+
+
+function toggleGameMode() {
+  winnerStays = !winnerStays; // Toggle mode
+  winner = null; // Reset winner when switching modes
+
+  // Update button text dynamically
+  const toggleButton = document.getElementById('toggle-game-mode');
+  toggleButton.innerText = winnerStays ? 'Disable Winner Stays' : 'Enable Winner Stays';
+
+  displayRandomPlayers(); // Refresh players to reflect mode change
+}
+
+// Attach the event listener to the button
+const toggleWinnerStaysButton = document.getElementById('toggle-game-mode');
+toggleWinnerStaysButton.onclick = toggleGameMode; // Use the toggleGameMode function
+
 
 // Switch between tabs
 function switchTab(tabName) {
