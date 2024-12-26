@@ -23,10 +23,32 @@
       
       <!-- Game Mode Toggle Button -->
       <div id="game-mode-toggle">
-        <button id="toggle-game-mode" class="toggle-button" onclick="toggleGameMode()">Switch to Winner Stays</button>
+        <button id="toggle-game-mode" class="toggle-button" onclick="toggleGameMode()">Enable Winner Stays</button>
       </div>
 
-      <div id="player-cards"></div>
+      <!-- Player Cards Section -->
+      <div id="player-cards">
+        <!-- Player cards will be dynamically inserted here -->
+      </div>
+
+      <!-- Season Stats Sidebar -->
+      <div id="season-stats">        
+        <!-- Left Player Season Stats -->
+        <div id="left-player-stats" class="season-stats-container">
+          <h4>Left Player Stats</h4>
+          <div id="left-player-stats-container">
+            <!-- Left player season stats table will be dynamically inserted here -->
+          </div>
+        </div>
+
+        <!-- Right Player Season Stats -->
+        <div id="right-player-stats" class="season-stats-container">
+          <h4>Right Player Stats</h4>
+          <div id="right-player-stats-container">
+            <!-- Right player season stats table will be dynamically inserted here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ELO Rankings Tab -->
