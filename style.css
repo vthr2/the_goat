@@ -1,10 +1,11 @@
 /* Global body styles */
 body {
-    font-family: 'Roboto', sans-serif; /* Modern font */
-    background-color: #fafafa; /* Light gray background */
+    font-family: 'Roboto', sans-serif;
+    background-color: #fafafa;
     margin: 0;
     padding: 0;
-    color: #333; /* Darker text color */
+    color: #333;
+    line-height: 1.6;
 }
 
 /* Main app container */
@@ -12,15 +13,16 @@ body {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* Header styles */
 header {
     text-align: center;
     padding: 20px 0;
-    background-color: #1e2a3a; /* Dark background for header */
+    background-color: #1e2a3a;
     color: white;
-    border-bottom: 2px solid #ff5722; /* Accent color */
+    border-bottom: 3px solid #ff5722;
 }
 
 h1 {
@@ -39,7 +41,7 @@ nav ul {
 }
 
 nav ul li {
-    margin: 0 20px;
+    margin: 0 25px;
 }
 
 nav a {
@@ -48,24 +50,72 @@ nav a {
     font-size: 18px;
     font-weight: bold;
     text-transform: uppercase;
-    transition: color 0.3s, transform 0.2s;
+    transition: color 0.3s, transform 0.2s ease-in-out;
 }
 
 nav a:hover {
     color: #ff5722;
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 nav a.active {
     color: #ff5722;
 }
 
+/* Adjust layout for the cards and stats section */
+#cards-and-stats-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 20px;
+    align-items: stretch;
+}
+
+/* Stats container for both players */
+#season-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1; /* Takes up available space */
+}
+
 /* Player cards container */
 #player-cards {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     gap: 20px;
-    margin-top: 20px;
+    flex: 1; /* Ensure it takes up available space */
+}
+
+/* Ensure the left player stats are first, then player cards */
+#left-player-stats-container {
+    order: 1; /* Left player stats come first */
+    flex: 1;
+}
+
+#left-player-card-container {
+    order: 2; /* Left player card comes second */
+    flex: 1;
+}
+
+#right-player-card-container {
+    order: 3; /* Right player card comes third */
+    flex: 1;
+}
+
+#right-player-stats-container {
+    order: 4; /* Right player stats come last */
+    flex: 1;
+}
+
+/* Player stats container */
+.stats-column {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Individual player card */
@@ -75,14 +125,14 @@ nav a.active {
     border-radius: 12px;
     padding: 20px;
     width: 250px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .player-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* Bigger shadow on hover */
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Player card heading */
@@ -95,10 +145,10 @@ nav a.active {
 
 /* Centered image and stats */
 .headshot {
-    width: 120px;
-    height: 150px;
+    width: 140px;
+    height: 210px;
     object-fit: cover;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     border-radius: 6px;
     border: 3px solid #f1f1f1;
 }
@@ -115,30 +165,6 @@ nav a.active {
     margin: 5px 0;
     font-size: 16px;
     color: #666;
-}
-
-/* Button styles */
-.button-select {
-    background-color: #007bff;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px;
-    transition: background-color 0.3s, transform 0.2s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.button-select:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-}
-
-.button-select:active {
-    transform: scale(1.1);
-    background-color: #003b78;
 }
 
 /* Rankings section styles */
@@ -166,14 +192,14 @@ nav a.active {
 .ranking-player {
     background-color: #f9f9f9;
     padding: 15px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 16px;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
 }
 
 .ranking-player:hover {
@@ -234,27 +260,11 @@ nav a.active {
 }
 
 .ranking-movement .up {
-    color: #28a745; /* Green for upward movement */
+    color: #28a745;
 }
 
 .ranking-movement .down {
-    color: #dc3545; /* Red for downward movement */
-}
-
-/* Medal Colors for Top Players */
-.gold {
-    background-color: #ffd700;
-    color: #333;
-}
-
-.silver {
-    background-color: #c0c0c0;
-    color: #333;
-}
-
-.bronze {
-    background-color: #cd7f32;
-    color: #333;
+    color: #dc3545;
 }
 
 /* Tab content styles */
@@ -267,19 +277,18 @@ nav a.active {
     display: block;
 }
 
-/* Toggle buttons */
+/* Toggle button styles */
 .toggle-button {
     background-color: #eeeeee;
     color: #333;
-    padding: 10px 20px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    margin-top: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s, transform 0.2s;
-    width: auto;
+    margin: 20px 45px;
+    width: 200px;
+    height: 50px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .toggle-button:hover {
@@ -299,33 +308,32 @@ nav a.active {
     font-size: 18px;
 }
 
-#game-mode-toggle .toggle-button {
-    margin-bottom: 20px;
-}
-
-#season-stats {
+/* Ensuring equal height for player cards and stats section */
+#cards-and-stats-container {
     display: flex;
     justify-content: space-between;
     gap: 20px;
     margin-top: 20px;
+    align-items: stretch;
 }
 
-.stats-column {
+#left-player-stats-container, #right-player-stats-container {
+    text-align: center;
     flex: 1;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stats-column h3 {
-    font-size: 22px;
-    color: #333;
-    margin-bottom: 10px;
-    text-align: center;
+#left-section, #right-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Takes available space */
+    gap: 20px;
 }
 
-#stats-container-left, #stats-container-right {
-    text-align: center;
+#player-cards {
+    flex: 1; /* Take available space */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
 }

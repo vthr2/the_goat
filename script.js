@@ -95,8 +95,8 @@ function parseSeasonCSV(data) {
       ppg: parseFloat(columns[indices['PPG']]) || 0,
       rpg: parseFloat(columns[indices['RPG']]) || 0,
       apg: parseFloat(columns[indices['APG']]) || 0,
-      fgp: parseFloat(columns[indices['FG_PCT']]) || 0,
-      tpp: parseFloat(columns[indices['FG_3PCT']]) || 0,
+      fgp: parseFloat(columns[indices['FG_PCT']])*100 || 0,
+      tpp: parseFloat(columns[indices['FG_3PCT']])*100 || 0,
     };
   });
 }
@@ -251,18 +251,25 @@ async function displayRandomPlayers(shuffle = true) {
   });
 
   // Toggle buttons to change views (same as before)
+  const toggleButtonsContainer = document.createElement('div');
+  toggleButtonsContainer.className = 'toggle-buttons-container';
+
   const toggleStatsButton = document.createElement('button');
   toggleStatsButton.className = 'toggle-button';
   toggleStatsButton.innerText = showAdvancedStats ? 'Show Regular Stats' : 'Show Advanced Stats';
   toggleStatsButton.onclick = toggleStatsView;
-  playerCardsDiv.appendChild(toggleStatsButton);
 
   const toggleHighsButton = document.createElement('button');
   toggleHighsButton.className = 'toggle-button';
   toggleHighsButton.innerText = showCareerHighs ? 'Show Career Averages' : 'Show Career Highs';
   toggleHighsButton.onclick = toggleCareerHighs;
-  playerCardsDiv.appendChild(toggleHighsButton);
+
+  toggleButtonsContainer.appendChild(toggleStatsButton);
+  toggleButtonsContainer.appendChild(toggleHighsButton);
+
+  playerCardsDiv.appendChild(toggleButtonsContainer);
 }
+
 
 // Function to toggle between regular and advanced stats
 function toggleStatsView() {
