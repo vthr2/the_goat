@@ -19,13 +19,13 @@ body {
     box-sizing: border-box;
 }
 
-/* Header styles */
 header {
     text-align: center;
-    padding: 20px 0;
-    background-color: #1e2a3a;
+    padding: 40px 20px;
+    background-color: #1e1e1e; /* Dark background */
     color: white;
-    border-bottom: 3px solid #ff5722; /* Orange accent */
+    border-bottom: 4px solid #ff5722; /* Orange border */
+    box-shadow: 0 0 10px rgba(255, 87, 34, 0.7); /* Glowing orange shadow */
 }
 
 h1 {
