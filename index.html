@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NBA Player Showdown</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"> <!-- Add this line -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -21,7 +21,7 @@
     <!-- Player Showdown Tab -->
     <div id="player-showdown" class="tab-content active">
       <div id="game-mode-toggle">
-        <button id="toggle-game-mode" class="toggle-button" onclick="toggleGameMode()">Disable Winner Stays</button>
+        <button id="toggle-game-mode" class="toggle-button" onclick="toggleGameMode()">Enable Winner Stays</button>
       </div>
 
       <div id="cards-and-stats-container">
@@ -45,6 +45,13 @@
     <!-- ELO Rankings Tab -->
     <div id="elo-rankings" class="tab-content">
       <h2>ELO Rankings</h2>
+      <!-- Add the search bar -->
+      <input
+        type="text"
+        id="search-bar"
+        placeholder="Search for a player..."
+        oninput="filterRankings()"
+      />
       <div id="rankings-list">
         <!-- Ranking items will be dynamically inserted here -->
       </div>

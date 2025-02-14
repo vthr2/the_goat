@@ -325,10 +325,10 @@ function updateRankingsDisplay() {
   fetch('http://127.0.0.1:5000/rankings')
     .then(response => response.json())
     .then(rankings => {
-      console.log("Rankings received:", rankings); // Debugging log
+      console.log('Rankings received:', rankings); // Debugging log
 
       const rankingsDiv = document.getElementById('rankings-list');
-      console.log("Rankings div:", rankingsDiv); // Check if rankingsDiv is being accessed correctly
+      console.log('Rankings div:', rankingsDiv); // Check if rankingsDiv is being accessed correctly
 
       // Clear previous rankings
       rankingsDiv.innerHTML = '';
@@ -357,6 +357,7 @@ function updateRankingsDisplay() {
 
         playerDiv.innerHTML = `
           <div class="player-ranking">
+            <div class="rank-number">${index + 1}.</div>
             <div class="player-info">
               <h3>${goatIcon}${medalIcon}${player[0]}</h3>
               <p>ELO: ${player[1].toFixed(0)}</p>
@@ -370,7 +371,6 @@ function updateRankingsDisplay() {
     .catch(error => console.error('Error fetching rankings:', error));
 }
 
-
 function toggleGameMode() {
   winnerStays = !winnerStays; // Toggle mode
   winner = null; // Reset winner when switching modes
@@ -380,6 +380,20 @@ function toggleGameMode() {
   toggleButton.innerText = winnerStays ? 'Disable Winner Stays' : 'Enable Winner Stays';
 }
 
+function filterRankings() {
+  const searchQuery = document.getElementById('search-bar').value.toLowerCase();
+  const rankingsDiv = document.getElementById('rankings-list');
+  const rankingPlayers = rankingsDiv.querySelectorAll('.ranking-player');
+
+  rankingPlayers.forEach((player) => {
+    const playerName = player.querySelector('h3').textContent.toLowerCase();
+    if (playerName.includes(searchQuery)) {
+      player.style.display = 'flex'; // Show matching players
+    } else {
+      player.style.display = 'none'; // Hide non-matching players
+    }
+  });
+}
 
 // Switch between tabs
 function switchTab(tabName) {

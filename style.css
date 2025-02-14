@@ -311,6 +311,30 @@ nav a.active {
 .tab-content.active {
     display: block;
 }
+/* Search Bar Styles */
+#search-bar {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  #search-bar:focus {
+    border-color: #ff5722; /* Orange focus border */
+  }
+  
+  /* Rank Number Styles */
+  .rank-number {
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 10px;
+    color: #333;
+  }
 
 /* Toggle button styles */
 .toggle-button {
