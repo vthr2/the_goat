@@ -325,9 +325,21 @@ function updateRankingsDisplay() {
   fetch('http://127.0.0.1:5000/rankings')
     .then(response => response.json())
     .then(rankings => {
+      console.log("Rankings received:", rankings); // Debugging log
+
       const rankingsDiv = document.getElementById('rankings-list');
+      console.log("Rankings div:", rankingsDiv); // Check if rankingsDiv is being accessed correctly
+
+      // Clear previous rankings
       rankingsDiv.innerHTML = '';
 
+      // Check if rankings array is empty or not
+      if (rankings.length === 0) {
+        rankingsDiv.innerHTML = '<p>No rankings available.</p>';
+        return;
+      }
+
+      // Iterate through rankings and create HTML
       rankings.forEach((player, index) => {
         const playerDiv = document.createElement('div');
         playerDiv.className = `ranking-player ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`;
@@ -351,6 +363,7 @@ function updateRankingsDisplay() {
             </div>
           </div>
         `;
+
         rankingsDiv.appendChild(playerDiv);
       });
     })
