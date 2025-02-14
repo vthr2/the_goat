@@ -357,9 +357,8 @@ function updateRankingsDisplay() {
 
         playerDiv.innerHTML = `
           <div class="player-ranking">
-            <div class="rank-number">${index + 1}.</div>
             <div class="player-info">
-              <h3>${goatIcon}${medalIcon}${player[0]}</h3>
+              <h3><span class="rank-number">${index + 1}.</span> ${goatIcon}${medalIcon}${player[0]}</h3>
               <p>ELO: ${player[1].toFixed(0)}</p>
             </div>
           </div>

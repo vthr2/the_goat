@@ -328,13 +328,20 @@ nav a.active {
     border-color: #ff5722; /* Orange focus border */
   }
   
-  /* Rank Number Styles */
-  .rank-number {
+/* Rank Number Styles */
+.rank-number {
     font-size: 18px;
     font-weight: bold;
     margin-right: 10px;
     color: #333;
+    display: inline-block; /* Ensure it appears inline with the name */
   }
+
+/* Player Info Styles */
+.player-info h3 {
+display: flex;
+align-items: center; /* Align the ranking number and name vertically */
+}
 
 /* Toggle button styles */
 .toggle-button {
@@ -344,7 +351,7 @@ nav a.active {
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    margin: 20px 135px;
+    margin: 20px 120px;
     width: 160px;
     height: 50px;
     transition: background-color 0.3s ease, transform 0.2s ease;
