@@ -11,7 +11,7 @@ const toggleWinnerStaysButton = document.getElementById('toggle-game-mode');
 toggleWinnerStaysButton.onclick = toggleGameMode; // Use the toggleGameMode function
 
 // Fetch player data and display random players
-fetch('nba_player_data.csv')
+fetch('/static/nba_player_data.csv')
   .then(response => response.text())
   .then(data => {
     players = parseCSV(data);
@@ -66,7 +66,7 @@ function parseCSV(data) {
 let seasonStats = []; // New variable to store the season stats
 
 // Fetch season stats data (assuming CSV format)
-fetch('season_averages.csv')
+fetch('/static/season_averages.csv')
   .then(response => response.text())
   .then(data => {
     seasonStats = parseSeasonCSV(data); // Parse the new CSV
@@ -289,7 +289,7 @@ function onPlayerSelect(selectedIndex) {
 
   selectedPlayers = [currentWinner, loser];
 
-  fetch('http://127.0.0.1:5000/update-elo', {
+  fetch('/update-elo', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -322,8 +322,10 @@ function onPlayerSelect(selectedIndex) {
 
 
 function updateRankingsDisplay() {
-  fetch('http://127.0.0.1:5000/rankings')
-    .then(response => response.json())
+  fetch('/rankings')
+    .then(response => {
+      console.log("Rankings API response:", response);
+      return response.json()})
     .then(rankings => {
       console.log('Rankings received:', rankings); // Debugging log
 

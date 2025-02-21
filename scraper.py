@@ -1,8 +1,26 @@
 import pandas as pd
 from basketball_reference_web_scraper import client
 from datetime import datetime
-import requests
 import time
+from nba_api.stats.endpoints import commonplayerinfo, playercareerstats
+from nba_api.stats.static import players
+import pandas as pd
+
+# Function to get a player's ID by name
+def get_player_id(player_name):
+    player_dict = players.find_players_by_full_name(player_name)
+    if player_dict:
+        return player_dict[0]['id']
+    else:
+        raise ValueError(f"Player '{player_name}' not found in NBA database.")
+
+# Function to get season averages for a player
+def get_season_averages(player_id):
+    career_stats = playercareerstats.PlayerCareerStats(player_id=player_id)
+    stats_df = career_stats.get_data_frames()[0]  # Regular season stats
+    return stats_df
+
+
 # Hugmyndir:
 # flipi fyrir honours og advanced stats byrjum með total averages
 # Loop over each year since start of nba
@@ -13,6 +31,7 @@ import time
 # TODO: Get honors
 # TODO: Get headshot of player
 # TODO: NOta https://github.com/swar/nba_api í staðinn fyrir basketball-reference api...
+
 current_year = datetime.now().year
 
 years_array = list(range(1950, (current_year+1)))  # 2025 is used as the end to include 2024
@@ -33,6 +52,8 @@ all_data_advanced = pd.DataFrame()
 #    data = client.players_season_totals(season_end_year=year)
 #    df = pd.DataFrame(data)
 #    all_data = pd.concat([all_data, df], ignore_index=True)
+
+
 
 final_df = pd.read_csv('./temp_nba_df.csv')
 advanced_df = pd.read_csv('./advanced_stats_nba.csv')
@@ -125,7 +146,7 @@ per_game_stats = df_filtered_over_25_games.groupby('slug').agg({
 total_stats = total_stats.join(per_game_stats)
 
 total_stats_filtered = total_stats[
-    (total_stats['total_games'] > 100) & 
+    (total_stats['total_games'] > 120) & 
     ((total_stats['max_ppg'] > 20) | 
      (total_stats['max_apg'] > 5) | 
      (total_stats['max_rpg'] > 10))
@@ -140,6 +161,45 @@ total_stats_filtered['three_point_percentage'] = total_stats_filtered['total_thr
 final_dataset = total_stats_filtered.merge(total_advanced_stats, how = 'inner', on = 'slug')
 
 
+error_log = pd.DataFrame(columns=['name', 'error'])  # DataFrame to store errors
+season_avg_data = pd.DataFrame()
+
+for name in final_dataset['name']:
+    time.sleep(1)
+    print(name)
+    try:
+        currentId = get_player_id(name)
+        current_stats = get_season_averages(currentId)
+        current_season_avg = pd.DataFrame(current_stats)
+        current_season_avg['name'] = name  # Add the name as a column to current_season_avg
+        season_avg_data = pd.concat([season_avg_data, current_season_avg], ignore_index=True)
+    except ValueError as e:
+        print(e)  # Log the error and continue with the next player
+        error_log = pd.concat([error_log, pd.DataFrame({'name': [name], 'error': [str(e)]})], ignore_index=True)
+
+
+
+season_avg_data['PTS'] = season_avg_data['PTS'].fillna(0)
+season_avg_data['REB'] = season_avg_data['REB'].fillna(0)
+season_avg_data['OREB'] = season_avg_data['OREB'].fillna(0)
+season_avg_data['DREB'] = season_avg_data['DREB'].fillna(0)
+season_avg_data['AST'] = season_avg_data['AST'].fillna(0)
+season_avg_data['BLK'] = season_avg_data['BLK'].fillna(0)
+season_avg_data['STL'] = season_avg_data['STL'].fillna(0)
+season_avg_data['TOV'] = season_avg_data['TOV'].fillna(0)
+season_avg_data['PF'] = season_avg_data['PF'].fillna(0)
+
+season_avg_data['PPG'] = season_avg_data['PTS']/season_avg_data['GP']
+season_avg_data['RPG'] = season_avg_data['REB']/season_avg_data['GP']
+season_avg_data['DRPG'] = season_avg_data['OREB']/season_avg_data['GP']
+season_avg_data['ORPG'] = season_avg_data['DREB']/season_avg_data['GP']
+season_avg_data['APG'] = season_avg_data['AST']/season_avg_data['GP']
+season_avg_data['BPG'] = season_avg_data['BLK']/season_avg_data['GP']
+season_avg_data['SPG'] = season_avg_data['STL']/season_avg_data['GP']
+season_avg_data['TOPG'] = season_avg_data['TOV']/season_avg_data['GP']
+season_avg_data['PFPG'] = season_avg_data['PF']/season_avg_data['GP']
+
+
 # Get player headshot from basketball reference
 base_url = 'https://www.basketball-reference.com/req/202106291/images/headshots/'
 
@@ -149,23 +209,9 @@ base_url = 'https://www.basketball-reference.com/req/202106291/images/headshots/
 # Ensure the column name is corrected
 final_dataset['headshot'] = base_url + final_dataset['slug'] + '.jpg'
 
-# Function to check if the headshot exists
-def image_exists(url):
-    try:
-        response = requests.head(url)
-        return response.status_code == 200
-    except requests.RequestException:
-        return False
-
-# Filter out players whose headshot image does not exist
-final_dataset['headshot_exists'] = final_dataset['headshot'].apply(image_exists)
-final_dataset_filtered = final_dataset[final_dataset['headshot_exists']]
-
-# Remove the 'headshot_exists' column as it's no longer needed
-final_dataset_filtered = final_dataset_filtered.drop(columns=['headshot_exists'])
-
 #TODO: Save to database, for now we save to csv file
 final_dataset.to_csv('nba_player_data.csv')
+season_avg_data.to_csv('season_averages.csv')
 
 
 

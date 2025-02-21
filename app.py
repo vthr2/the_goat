@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
+from flask import Flask, request, jsonify, send_from_directory  # Added send_from_directory
+from flask_cors import CORS
 import sqlite3
 import csv
+import os  # Added for path handling
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)
 
 # Initialize database
 def init_db():
@@ -19,6 +20,11 @@ def init_db():
             )
         """)
         conn.commit()
+
+# Serve the index.html file at the root URL
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
 
 # Route to load players from CSV into the database (Insert only if players do not exist)
 @app.route('/load-players', methods=['POST'])
