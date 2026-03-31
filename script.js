@@ -374,4 +374,27 @@ function switchTab(tabName) {
   document.querySelectorAll('nav a').forEach(link => link.classList.remove('active'));
   const activeLink = document.querySelector(`a[onclick="switchTab('${tabName}')"]`);
   if (activeLink) activeLink.classList.add('active');
+  if (tabName === 'stats') loadStats();
+}
+
+function loadStats() {
+  fetch('/stats')
+    .then(res => res.json())
+    .then(data => {
+      const el = document.getElementById('stats-content');
+      el.innerHTML = `
+        <p><strong>Total votes cast:</strong> ${data.total_votes}</p>
+        <h3>Most Voted Players</h3>
+        <table>
+          <tr><th>Player</th><th>Appearances</th><th>Wins</th><th>Losses</th></tr>
+          ${data.most_voted.map(p => `<tr><td>${p.name}</td><td>${p.appearances}</td><td>${p.wins}</td><td>${p.losses}</td></tr>`).join('')}
+        </table>
+        <h3>Best Win Rate (min. 10 appearances)</h3>
+        <table>
+          <tr><th>Player</th><th>Win Rate</th><th>Wins</th><th>Losses</th></tr>
+          ${data.best_win_rate.map(p => `<tr><td>${p.name}</td><td>${p.win_rate}%</td><td>${p.wins}</td><td>${p.losses}</td></tr>`).join('')}
+        </table>
+      `;
+    })
+    .catch(err => console.error('Error loading stats:', err));
 }
