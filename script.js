@@ -13,7 +13,7 @@ toggleWinnerStaysButton.onclick = toggleGameMode;
 
 // Fix 1: Use Promise.all to ensure ALL data is loaded before rendering
 Promise.all([
-  fetch('http://127.0.0.1:5000/awards').then(res => res.json()).catch(e => { console.error('Error loading awards:', e); return {}; }),
+  fetch('/awards').then(res => res.json()).catch(e => { console.error('Error loading awards:', e); return {}; }),
   fetch('/static/nba_player_data.csv').then(res => res.text()),
   fetch('/static/season_averages.csv').then(res => res.text())
 ]).then(([awardsData, playerData, seasonData]) => {
