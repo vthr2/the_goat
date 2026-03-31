@@ -26,6 +26,10 @@ def init_db():
 def index():
     return send_from_directory('.', 'index.html')
 
+@app.route('/<path:filename>')
+def serve_root_files(filename):
+    return send_from_directory('.', filename)
+
 # Route to load players from CSV into the database (Insert only if players do not exist)
 @app.route('/load-players', methods=['POST'])
 def load_players():
