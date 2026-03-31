@@ -35,7 +35,6 @@ def get_player_id(player_name):
 # TODO: Get headshot of player
 # TODO: NOta https://github.com/swar/nba_api í staðinn fyrir basketball-reference api...
 
-
 current_year = datetime.now().year
 
 years_array = list(range(1950, (current_year+1)))  # 2025 is used as the end to include 2024
@@ -56,8 +55,6 @@ all_data_advanced = pd.DataFrame()
 #    data = client.players_season_totals(season_end_year=year)
 #    df = pd.DataFrame(data)
 #    all_data = pd.concat([all_data, df], ignore_index=True)
-
-
 
 
 
@@ -152,7 +149,6 @@ per_game_stats = df_filtered_over_25_games.groupby('slug').agg({
 total_stats = total_stats.join(per_game_stats)
 
 total_stats_filtered = total_stats[
-    (total_stats['total_games'] > 120) & 
     (total_stats['total_games'] > 120) & 
     ((total_stats['max_ppg'] > 20) | 
      (total_stats['max_apg'] > 5) | 
