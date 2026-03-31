@@ -7,6 +7,8 @@ let winnerStays = true;
 let winner;
 let playerAwards = {};
 let seasonStats = [];
+let topN = null;
+let rankedPlayerNames = [];
 
 const toggleWinnerStaysButton = document.getElementById('toggle-game-mode');
 toggleWinnerStaysButton.onclick = toggleGameMode;
@@ -149,10 +151,13 @@ function isImageValid(url) {
 }
 
 async function getRandomPlayers() {
+  const pool = topN && rankedPlayerNames.length >= topN
+    ? players.filter(p => rankedPlayerNames.slice(0, topN).includes(p.name))
+    : players;
   let validPlayers = [];
   if (winnerStays && winner) validPlayers.push(winner);
   while (validPlayers.length < 2) {
-    const randomPlayer = players[Math.floor(Math.random() * players.length)];
+    const randomPlayer = pool[Math.floor(Math.random() * pool.length)];
     if (validPlayers.some(p => p.name === randomPlayer.name)) continue;
     const isValid = await isImageValid(randomPlayer.headshot);
     if (isValid) validPlayers.push(randomPlayer);
@@ -247,6 +252,16 @@ async function displayRandomPlayers(shuffle = true) {
   wrapper.appendChild(toggleHighsButton);
 }
 
+function setTopN(n) {
+  if (topN === n) return;
+  topN = n;
+  winner = null;
+  document.querySelectorAll('.top-n-btn').forEach(btn => btn.classList.remove('active'));
+  const selector = n === null ? '.top-n-btn:first-child' : `.top-n-btn[onclick="setTopN(${n})"]`;
+  document.querySelector(selector).classList.add('active');
+  displayRandomPlayers();
+}
+
 function toggleStatsView() {
   showAdvancedStats = !showAdvancedStats;
   displayRandomPlayers(false);
@@ -286,6 +301,8 @@ function updateRankingsDisplay() {
       const rankingsDiv = document.getElementById('rankings-list');
       rankingsDiv.innerHTML = '';
 
+      rankedPlayerNames = rankings.map(r => r.name);
+
       if (rankings.length === 0) {
         rankingsDiv.innerHTML = '<p>No rankings available.</p>';
         return;
@@ -295,19 +312,24 @@ function updateRankingsDisplay() {
         const playerDiv = document.createElement('div');
         playerDiv.className = `ranking-player ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`;
 
-        // STEP 5: ELO Rank Hover Events
-        playerDiv.onmouseenter = (e) => showHoverCard(player[0], e);
+        playerDiv.onmouseenter = (e) => showHoverCard(player.name, e);
         playerDiv.onmouseleave = hideHoverCard;
 
-        let medalIcon = index === 0 ? '<span class="goat">🐐</span>' : 
-                        index === 1 ? '<span class="medal second">🥈</span>' : 
-                        index === 2 ? '<span class="medal third">🥉</span>' : '';
+        const medalIcon = index === 0 ? '<span class="goat">🐐</span>' :
+                          index === 1 ? '<span class="medal second">🥈</span>' :
+                          index === 2 ? '<span class="medal third">🥉</span>' : '';
+        const appearances = player.wins + player.losses;
+        const winRate = appearances > 0 ? ((player.wins / appearances) * 100).toFixed(0) + '%' : '—';
 
         playerDiv.innerHTML = `
           <div class="player-ranking">
             <div class="player-info">
-              <h3><span class="rank-number">${index + 1}.</span> ${medalIcon}${player[0]}</h3>
-              <p>ELO: ${player[1].toFixed(0)}</p>
+              <h3><span class="rank-number">${index + 1}.</span> ${medalIcon}${player.name}</h3>
+              <p>ELO: ${player.elo.toFixed(0)}</p>
+            </div>
+            <div class="player-stats-summary">
+              <span>${player.wins}W / ${player.losses}L</span>
+              <span>${winRate} win rate</span>
             </div>
           </div>
         `;

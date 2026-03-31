@@ -261,3 +261,94 @@ nav a:hover, nav a.active { color: var(--accent); border-bottom-color: var(--acc
   from { opacity: 0; transform: translateY(5px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+/* ── Top N Button Group ────────────────────────── */
+.top-n-group {
+  display: inline-flex;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-left: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.top-n-btn {
+  background-color: var(--surface);
+  color: var(--text);
+  padding: 10px 16px;
+  border: none;
+  border-right: 1.5px solid var(--border);
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.top-n-btn:last-child { border-right: none; }
+.top-n-btn:hover { background-color: #f0f0f0; color: var(--accent); }
+.top-n-btn.active { background-color: #1a1b1e; color: #fff; }
+
+/* ── Ranking Win/Loss Summary ──────────────────── */
+.player-ranking {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.player-stats-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+  color: var(--text-muted);
+  gap: 2px;
+}
+
+/* ── Mobile ────────────────────────────────────── */
+@media (max-width: 768px) {
+  h1 { font-size: 24px; }
+
+  .container { padding: 16px 12px; }
+
+  /* Stack game mode controls vertically */
+  #game-mode-toggle {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-n-group { margin-left: 0; }
+
+  /* Stack the two player units on top of each other */
+  #players-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  /* Stack card and stats panel vertically, card always on top */
+  .player-unit {
+    flex-direction: column;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  /* Player 1 has [stats-panel, card] in DOM — reorder so card comes first */
+  .player-unit:first-child .player-card  { order: 1; }
+  .player-unit:first-child .stats-panel  { order: 2; }
+
+  .player-card  { width: 100%; }
+  .stats-panel  { width: 100%; max-height: 300px; }
+
+  /* Reduce gap between the two toggle buttons */
+  #toggle-buttons-wrapper {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 24px auto 16px;
+  }
+
+  /* Disable hover card on touch devices */
+  .hover-card-popup { display: none !important; }
+}

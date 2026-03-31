@@ -14,11 +14,19 @@ def init_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS player_rankings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                authenticator TEXT UNIQUE NOT NULL, 
+                authenticator TEXT UNIQUE NOT NULL,
                 name TEXT UNIQUE NOT NULL,
-                elo_rating REAL NOT NULL DEFAULT 1200
+                elo_rating REAL NOT NULL DEFAULT 1200,
+                wins INTEGER NOT NULL DEFAULT 0,
+                losses INTEGER NOT NULL DEFAULT 0
             )
         """)
+        cursor.execute("PRAGMA table_info(player_rankings)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'wins' not in columns:
+            cursor.execute("ALTER TABLE player_rankings ADD COLUMN wins INTEGER NOT NULL DEFAULT 0")
+        if 'losses' not in columns:
+            cursor.execute("ALTER TABLE player_rankings ADD COLUMN losses INTEGER NOT NULL DEFAULT 0")
         conn.commit()
 
 # Serve the index.html file at the root URL
@@ -83,15 +91,15 @@ def update_elo():
         new_winner_rating = winner[1] + K * (1 - expected_winner)
         new_loser_rating = loser[1] + K * (0 - expected_loser)
 
-        # Update database with new ELO ratings
+        # Update database with new ELO ratings, wins, and losses
         cursor.execute("""
             UPDATE player_rankings
-            SET elo_rating = CASE
-                WHEN name = ? THEN ?
-                WHEN name = ? THEN ?
-            END
+            SET elo_rating = CASE WHEN name = ? THEN ? WHEN name = ? THEN ? END,
+                wins = CASE WHEN name = ? THEN wins + 1 ELSE wins END,
+                losses = CASE WHEN name = ? THEN losses + 1 ELSE losses END
             WHERE name IN (?, ?)
-        """, (winner_name, new_winner_rating, loser_name, new_loser_rating, winner_name, loser_name))
+        """, (winner_name, new_winner_rating, loser_name, new_loser_rating,
+              winner_name, loser_name, winner_name, loser_name))
 
         conn.commit()
 
@@ -111,9 +119,22 @@ def print_table():
 def get_rankings():
     with sqlite3.connect("nba_game.db") as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT name, elo_rating FROM player_rankings ORDER BY elo_rating DESC")
-        rankings = cursor.fetchall()
+        cursor.execute("SELECT name, elo_rating, wins, losses FROM player_rankings ORDER BY elo_rating DESC")
+        rankings = [{'name': r[0], 'elo': r[1], 'wins': r[2], 'losses': r[3]} for r in cursor.fetchall()]
     return jsonify(rankings)
+
+# Route to get site stats
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    with sqlite3.connect("nba_game.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT SUM(wins) FROM player_rankings")
+        total_votes = cursor.fetchone()[0] or 0
+        cursor.execute("SELECT name, wins, losses FROM player_rankings WHERE wins + losses > 0 ORDER BY wins + losses DESC LIMIT 10")
+        most_voted = [{'name': r[0], 'wins': r[1], 'losses': r[2], 'appearances': r[1] + r[2]} for r in cursor.fetchall()]
+        cursor.execute("SELECT name, wins, losses FROM player_rankings WHERE wins + losses >= 10 ORDER BY CAST(wins AS FLOAT) / (wins + losses) DESC LIMIT 10")
+        best_win_rate = [{'name': r[0], 'wins': r[1], 'losses': r[2], 'win_rate': round(r[1] / (r[1] + r[2]) * 100, 1)} for r in cursor.fetchall()]
+    return jsonify({'total_votes': total_votes, 'most_voted': most_voted, 'best_win_rate': best_win_rate})
 
 # Route to get player awards (loaded from awards_summary.csv)
 @app.route('/awards', methods=['GET'])
