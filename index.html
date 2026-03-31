@@ -18,44 +18,29 @@
   </nav>
 
   <div class="container">
+
     <!-- Player Showdown Tab -->
     <div id="player-showdown" class="tab-content active">
+
       <div id="game-mode-toggle">
-        <button id="toggle-game-mode" class="toggle-button" onclick="toggleGameMode()">Disable Winner Stays</button>
+        <button id="toggle-game-mode" class="toggle-button">Disable Winner Stays</button>
       </div>
 
-      <div id="cards-and-stats-container">
-        <!-- Left Player Stats -->
-        <div id="left-player-stats-container" class="stats-column">
-            <!-- Left player stats will be dynamically added here -->
-        </div>
-    
-        <!-- Player Cards -->
-        <div id="player-cards">
-            <!-- Player cards will be dynamically added here -->
-        </div>
-    
-        <!-- Right Player Stats -->
-        <div id="right-player-stats-container" class="stats-column">
-            <!-- Right player stats will be dynamically added here -->
-        </div>
-      </div>
+      <!-- Two player units (each = card + season stats side by side) -->
+      <div id="players-row"></div>
+
+      <!-- Toggle buttons centered below -->
+      <div id="toggle-buttons-wrapper"></div>
+
     </div>
 
     <!-- ELO Rankings Tab -->
     <div id="elo-rankings" class="tab-content">
       <h2>ELO Rankings</h2>
-      <!-- Add the search bar -->
-      <input
-        type="text"
-        id="search-bar"
-        placeholder="Search for a player..."
-        oninput="filterRankings()"
-      />
-      <div id="rankings-list">
-        <!-- Ranking items will be dynamically inserted here -->
-      </div>
+      <input type="text" id="search-bar" placeholder="Search for a player..." oninput="filterRankings()" />
+      <div id="rankings-list"></div>
     </div>
+
   </div>
 
   <script src="script.js"></script>

@@ -5,10 +5,17 @@ let showCareerHighs = false;
 let selectedPlayers = [];
 let winnerStays = true;
 let winner;
+let playerAwards = {};
 
 // Attach the event listener to the button
 const toggleWinnerStaysButton = document.getElementById('toggle-game-mode');
 toggleWinnerStaysButton.onclick = toggleGameMode; // Use the toggleGameMode function
+
+// Fetch awards data from Flask
+fetch('http://127.0.0.1:5000/awards')
+  .then(response => response.json())
+  .then(data => { playerAwards = data; })
+  .catch(error => console.error('Error loading awards:', error));
 
 // Fetch player data and display random players
 fetch('/static/nba_player_data.csv')
@@ -96,7 +103,7 @@ function parseSeasonCSV(data) {
       rpg: parseFloat(columns[indices['RPG']]) || 0,
       apg: parseFloat(columns[indices['APG']]) || 0,
       fgp: parseFloat(columns[indices['FG_PCT']])*100 || 0,
-      tpp: parseFloat(columns[indices['FG_3PCT']])*100 || 0,
+      tpp: parseFloat(columns[indices['FG3_PCT']])*100 || 0,
     };
   });
 }
@@ -104,31 +111,37 @@ function parseSeasonCSV(data) {
 
 // Function to display season stats of the selected player
 function displaySeasonStats(playerName, containerDiv) {
-  containerDiv.innerHTML = ''; // Clear previous stats
+  containerDiv.innerHTML = '';
 
-  // Filter season stats for the selected player
   const playerSeasonStats = seasonStats.filter(stat => stat.name === playerName);
   if (playerSeasonStats.length === 0) {
-    containerDiv.innerHTML = '<p>No season stats available for this player.</p>';
+    containerDiv.innerHTML = `<p class="stats-panel-title">${playerName}</p><p style="text-align:center;color:var(--text-muted);font-size:13px;">No season data available.</p>`;
     return;
   }
 
-  // Display season stats
+  // Player name as panel title
+  const title = document.createElement('p');
+  title.className = 'stats-panel-title';
+  title.textContent = playerName;
+  containerDiv.appendChild(title);
+
   const statsTable = document.createElement('table');
   const headerRow = document.createElement('tr');
   headerRow.innerHTML = `<th>Season</th><th>Team</th><th>PPG</th><th>RPG</th><th>APG</th><th>FG%</th><th>3P%</th>`;
   statsTable.appendChild(headerRow);
 
   playerSeasonStats.forEach(stat => {
+    // Shorten "2023-24" → "23-24" to save column space
+    const shortSeason = stat.season ? stat.season.slice(-5) : stat.season;
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${stat.season}</td>
+      <td>${shortSeason}</td>
       <td>${stat.team}</td>
       <td>${stat.ppg.toFixed(1)}</td>
       <td>${stat.rpg.toFixed(1)}</td>
       <td>${stat.apg.toFixed(1)}</td>
-      <td>${(stat.fgp).toFixed(1)}%</td>
-      <td>${(stat.tpp).toFixed(1)}%</td>
+      <td>${stat.fgp.toFixed(1)}%</td>
+      <td>${stat.tpp.toFixed(1)}%</td>
     `;
     statsTable.appendChild(row);
   });
@@ -136,6 +149,23 @@ function displaySeasonStats(playerName, containerDiv) {
   containerDiv.appendChild(statsTable);
 }
 
+
+// Build award pills for a player card — wrapping pills, one per award type
+function buildAwardsHtml(playerName) {
+  const a = playerAwards[playerName];
+  if (!a) return '';
+
+  const pills = [];
+  if (a.champion   > 0) pills.push(`<span class="award-pill champion">🏆 ${a.champion}× Ring${a.champion > 1 ? 's' : ''}</span>`);
+  if (a.mvp        > 0) pills.push(`<span class="award-pill mvp">🏅 ${a.mvp}× MVP</span>`);
+  if (a.finals_mvp > 0) pills.push(`<span class="award-pill finals_mvp">🎯 ${a.finals_mvp}× Finals MVP</span>`);
+  if (a.allstar    > 0) pills.push(`<span class="award-pill allstar">⭐ ${a.allstar}× All-Star</span>`);
+  if (a.dpoy       > 0) pills.push(`<span class="award-pill dpoy">🛡️ ${a.dpoy}× DPOY</span>`);
+  if (a.sixmoy     > 0) pills.push(`<span class="award-pill sixmoy">6️⃣ ${a.sixmoy}× 6MOY</span>`);
+
+  if (pills.length === 0) return '';
+  return `<div class="awards-row">${pills.join('')}</div>`;
+}
 
 // Function to check if an image URL is valid
 function isImageValid(url) {
@@ -175,99 +205,84 @@ async function getRandomPlayers() {
 }
 
 async function displayRandomPlayers(shuffle = true) {
-  const playerCardsDiv = document.getElementById('player-cards');
-  playerCardsDiv.innerHTML = '';
+  const playersRow = document.getElementById('players-row');
+  playersRow.innerHTML = '';
 
   if (shuffle || displayedPlayers.length === 0) {
     displayedPlayers = await getRandomPlayers();
   }
 
   displayedPlayers.forEach((player, index) => {
-    const card = document.createElement('div');
-    card.className = 'player-card';
-
     const statsToShow = showCareerHighs ? {
-      ppg: player.max_ppg,
-      rpg: player.max_rpg,
-      apg: player.max_apg,
-      fgp: player.max_fgp,
-      tpp: player.max_3pp,
-      PER: player.Max_PER,
-      TS: player.Max_TS,
-      VORP: player.Max_VORP,
-      OBP: player.Max_OBP,
-      DBP: player.Max_DBP,
-      WinShares: player.Max_Win_shares
+      ppg: player.max_ppg, rpg: player.max_rpg, apg: player.max_apg,
+      fgp: player.max_fgp, tpp: player.max_3pp,
+      PER: player.Max_PER, TS: player.Max_TS, VORP: player.Max_VORP,
+      OBP: player.Max_OBP, DBP: player.Max_DBP, WinShares: player.Max_Win_shares
     } : {
-      ppg: player.avg_ppg,
-      rpg: player.avg_rpg,
-      apg: player.avg_apg,
-      fgp: player.field_goal_percentage,
-      tpp: player.three_point_percentage,
-      PER: player.Average_PER,
-      TS: player.Average_TS,
-      VORP: player.Average_VORP,
-      OBP: player.Average_OBP,
-      DBP: player.Average_DBP,
-      WinShares: player.Average_Win_shares
+      ppg: player.avg_ppg, rpg: player.avg_rpg, apg: player.avg_apg,
+      fgp: player.field_goal_percentage, tpp: player.three_point_percentage,
+      PER: player.Average_PER, TS: player.Average_TS, VORP: player.Average_VORP,
+      OBP: player.Average_OBP, DBP: player.Average_DBP, WinShares: player.Average_Win_shares
     };
 
+    // ── Card ──────────────────────────────────────
+    const card = document.createElement('div');
+    card.className = 'player-card';
     card.innerHTML = `
       <div class="card-content">
         <img src="${player.headshot}" alt="${player.name}" class="headshot">
-        <div class="info">
-          <h2>${player.name}</h2>
+        <h2>${player.name}</h2>
+        ${buildAwardsHtml(player.name)}
+        <div class="card-stats">
           ${showAdvancedStats ? `
-          <p><strong>PER:</strong> ${statsToShow.PER.toFixed(1)}</p>
-          <p><strong>Win Shares:</strong> ${statsToShow.WinShares.toFixed(1)}</p>
-          <p><strong>OBP:</strong> ${statsToShow.OBP.toFixed(1)}</p>
-          <p><strong>DBP:</strong> ${statsToShow.DBP.toFixed(1)}</p>
-          <p><strong>VORP:</strong> ${statsToShow.VORP.toFixed(1)}</p>
-          <p><strong>TS%:</strong> ${(statsToShow.TS * 100).toFixed(1)}%</p>
+            <p><strong>PER:</strong> ${statsToShow.PER.toFixed(1)}</p>
+            <p><strong>Win Shares:</strong> ${statsToShow.WinShares.toFixed(1)}</p>
+            <p><strong>OBP:</strong> ${statsToShow.OBP.toFixed(1)}</p>
+            <p><strong>DBP:</strong> ${statsToShow.DBP.toFixed(1)}</p>
+            <p><strong>VORP:</strong> ${statsToShow.VORP.toFixed(1)}</p>
+            <p><strong>TS%:</strong> ${(statsToShow.TS * 100).toFixed(1)}%</p>
           ` : `
-          <p><strong>PPG:</strong> ${statsToShow.ppg.toFixed(1)}</p>
-          <p><strong>APG:</strong> ${statsToShow.apg.toFixed(1)}</p>
-          <p><strong>RPG:</strong> ${statsToShow.rpg.toFixed(1)}</p>
-          <p><strong>FG%:</strong> ${(statsToShow.fgp * 100).toFixed(1)}%</p>
-          <p><strong>3P%:</strong> ${(statsToShow.tpp * 100).toFixed(1)}%</p>
+            <p><strong>PPG:</strong> ${statsToShow.ppg.toFixed(1)}</p>
+            <p><strong>APG:</strong> ${statsToShow.apg.toFixed(1)}</p>
+            <p><strong>RPG:</strong> ${statsToShow.rpg.toFixed(1)}</p>
+            <p><strong>FG%:</strong> ${(statsToShow.fgp * 100).toFixed(1)}%</p>
+            <p><strong>3P%:</strong> ${(statsToShow.tpp * 100).toFixed(1)}%</p>
           `}
         </div>
         <button class="button-select" onclick="onPlayerSelect(${index})">Select</button>
       </div>
     `;
 
-    playerCardsDiv.appendChild(card);
+    // ── Season stats panel ────────────────────────
+    const statsPanel = document.createElement('div');
+    statsPanel.className = 'stats-panel';
+    displaySeasonStats(player.name, statsPanel);
 
-    // Display season stats for the left and right player
-    if (index === 0) {
-      const leftStatsDiv = document.getElementById('left-player-stats-container');
-      leftStatsDiv.innerHTML = ''; // Clear previous stats
-      displaySeasonStats(player.name, leftStatsDiv);
-    } else if (index === 1) {
-      const rightStatsDiv = document.getElementById('right-player-stats-container');
-      rightStatsDiv.innerHTML = ''; // Clear previous stats
-      displaySeasonStats(player.name, rightStatsDiv);
-    }
+    // ── Unit = card + stats side by side ──────────
+    const unit = document.createElement('div');
+    unit.className = 'player-unit';
+    unit.appendChild(card);
+    unit.appendChild(statsPanel);
+
+    playersRow.appendChild(unit);
   });
 
-  // Toggle buttons to change views (same as before)
-  const toggleButtonsContainer = document.createElement('div');
-  toggleButtonsContainer.className = 'toggle-buttons-container';
+  // ── Toggle buttons ────────────────────────────
+  const wrapper = document.getElementById('toggle-buttons-wrapper');
+  wrapper.innerHTML = '';
 
   const toggleStatsButton = document.createElement('button');
-  toggleStatsButton.className = 'toggle-button';
+  toggleStatsButton.className = 'toggle-button' + (showAdvancedStats ? ' active' : '');
   toggleStatsButton.innerText = showAdvancedStats ? 'Show Regular Stats' : 'Show Advanced Stats';
   toggleStatsButton.onclick = toggleStatsView;
 
   const toggleHighsButton = document.createElement('button');
-  toggleHighsButton.className = 'toggle-button';
+  toggleHighsButton.className = 'toggle-button' + (showCareerHighs ? ' active' : '');
   toggleHighsButton.innerText = showCareerHighs ? 'Show Career Averages' : 'Show Career Highs';
   toggleHighsButton.onclick = toggleCareerHighs;
 
-  toggleButtonsContainer.appendChild(toggleStatsButton);
-  toggleButtonsContainer.appendChild(toggleHighsButton);
-
-  playerCardsDiv.appendChild(toggleButtonsContainer);
+  wrapper.appendChild(toggleStatsButton);
+  wrapper.appendChild(toggleHighsButton);
 }
 
 

@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory  # Added send_fro
 from flask_cors import CORS
 import sqlite3
 import csv
-import os  # Added for path handling
+import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
@@ -110,6 +110,28 @@ def get_rankings():
         cursor.execute("SELECT name, elo_rating FROM player_rankings ORDER BY elo_rating DESC")
         rankings = cursor.fetchall()
     return jsonify(rankings)
+
+# Route to get player awards (loaded from awards_summary.csv)
+@app.route('/awards', methods=['GET'])
+def get_awards():
+    try:
+        df = pd.read_csv('awards_summary.csv')
+        awards_dict = {}
+        for _, row in df.iterrows():
+            awards_dict[row['name']] = {
+                'mvp':        int(row['mvp']),
+                'dpoy':       int(row['dpoy']),
+                'sixmoy':     int(row['sixmoy']),
+                'finals_mvp': int(row['finals_mvp']),
+                'allstar':    int(row['allstar']),
+                'champion':   int(row['champion']),
+            }
+        return jsonify(awards_dict)
+    except FileNotFoundError:
+        return jsonify({})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # Main entry point to initialize the DB and run the app
 if __name__ == '__main__':

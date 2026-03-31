@@ -2,9 +2,12 @@ import pandas as pd
 from basketball_reference_web_scraper import client
 from datetime import datetime
 import time
+
 from nba_api.stats.endpoints import commonplayerinfo, playercareerstats
 from nba_api.stats.static import players
 import pandas as pd
+
+
 
 # Function to get a player's ID by name
 def get_player_id(player_name):
@@ -15,10 +18,10 @@ def get_player_id(player_name):
         raise ValueError(f"Player '{player_name}' not found in NBA database.")
 
 # Function to get season averages for a player
-def get_season_averages(player_id):
-    career_stats = playercareerstats.PlayerCareerStats(player_id=player_id)
-    stats_df = career_stats.get_data_frames()[0]  # Regular season stats
-    return stats_df
+#def get_season_averages(player_id):
+#    career_stats = playercareerstats.PlayerCareerStats(player_id=player_id)
+#    stats_df = career_stats.get_data_frames()[0]  # Regular season stats
+#    return stats_df
 
 
 # Hugmyndir:
@@ -31,6 +34,7 @@ def get_season_averages(player_id):
 # TODO: Get honors
 # TODO: Get headshot of player
 # TODO: NOta https://github.com/swar/nba_api í staðinn fyrir basketball-reference api...
+
 
 current_year = datetime.now().year
 
@@ -52,6 +56,8 @@ all_data_advanced = pd.DataFrame()
 #    data = client.players_season_totals(season_end_year=year)
 #    df = pd.DataFrame(data)
 #    all_data = pd.concat([all_data, df], ignore_index=True)
+
+
 
 
 
@@ -147,6 +153,7 @@ total_stats = total_stats.join(per_game_stats)
 
 total_stats_filtered = total_stats[
     (total_stats['total_games'] > 120) & 
+    (total_stats['total_games'] > 120) & 
     ((total_stats['max_ppg'] > 20) | 
      (total_stats['max_apg'] > 5) | 
      (total_stats['max_rpg'] > 10))
@@ -164,18 +171,18 @@ final_dataset = total_stats_filtered.merge(total_advanced_stats, how = 'inner', 
 error_log = pd.DataFrame(columns=['name', 'error'])  # DataFrame to store errors
 season_avg_data = pd.DataFrame()
 
-for name in final_dataset['name']:
-    time.sleep(1)
-    print(name)
-    try:
-        currentId = get_player_id(name)
-        current_stats = get_season_averages(currentId)
-        current_season_avg = pd.DataFrame(current_stats)
-        current_season_avg['name'] = name  # Add the name as a column to current_season_avg
-        season_avg_data = pd.concat([season_avg_data, current_season_avg], ignore_index=True)
-    except ValueError as e:
-        print(e)  # Log the error and continue with the next player
-        error_log = pd.concat([error_log, pd.DataFrame({'name': [name], 'error': [str(e)]})], ignore_index=True)
+#for name in final_dataset['name']:
+#    time.sleep(1)
+#    print(name)
+#    try:
+#        currentId = get_player_id(name)
+#        current_stats = get_season_averages(currentId)
+#        current_season_avg = pd.DataFrame(current_stats)
+#        current_season_avg['name'] = name  # Add the name as a column to current_season_avg
+##        season_avg_data = pd.concat([season_avg_data, current_season_avg], ignore_index=True)
+#    except ValueError as e:
+#        print(e)  # Log the error and continue with the next player
+#        error_log = pd.concat([error_log, pd.DataFrame({'name': [name], 'error': [str(e)]})], ignore_index=True)
 
 
 
@@ -212,6 +219,7 @@ final_dataset['headshot'] = base_url + final_dataset['slug'] + '.jpg'
 #TODO: Save to database, for now we save to csv file
 final_dataset.to_csv('nba_player_data.csv')
 season_avg_data.to_csv('season_averages.csv')
+
 
 
 
