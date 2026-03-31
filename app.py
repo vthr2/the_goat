@@ -119,8 +119,8 @@ def print_table():
 def get_rankings():
     with sqlite3.connect("nba_game.db") as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT name, elo_rating FROM player_rankings ORDER BY elo_rating DESC")
-        rankings = cursor.fetchall()
+        cursor.execute("SELECT name, elo_rating, wins, losses FROM player_rankings ORDER BY elo_rating DESC")
+        rankings = [{'name': r[0], 'elo': r[1], 'wins': r[2], 'losses': r[3]} for r in cursor.fetchall()]
     return jsonify(rankings)
 
 # Route to get site stats

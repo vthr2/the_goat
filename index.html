@@ -15,13 +15,19 @@
   <nav>
     <a href="#" onclick="switchTab('player-showdown')" class="active">Player Showdown</a>
     <a href="#" onclick="switchTab('elo-rankings')">ELO Rankings</a>
-    <a href="#" onclick="switchTab('stats')">Stats</a>
   </nav>
 
   <div class="container">
     <div id="player-showdown" class="tab-content active">
       <div id="game-mode-toggle">
         <button id="toggle-game-mode" class="toggle-button active">Disable Winner Stays</button>
+        <div class="top-n-group">
+          <button class="top-n-btn active" onclick="setTopN(null)">All</button>
+          <button class="top-n-btn" onclick="setTopN(100)">Top 100</button>
+          <button class="top-n-btn" onclick="setTopN(50)">Top 50</button>
+          <button class="top-n-btn" onclick="setTopN(25)">Top 25</button>
+          <button class="top-n-btn" onclick="setTopN(10)">Top 10</button>
+        </div>
       </div>
 
       <div id="players-row"></div>
@@ -35,10 +41,6 @@
       <div id="rankings-list"></div>
     </div>
 
-    <div id="stats" class="tab-content">
-      <h2>Site Stats</h2>
-      <div id="stats-content"></div>
-    </div>
   </div>
 
   <div id="hover-card-container" class="hover-card-popup"></div>
