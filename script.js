@@ -6,23 +6,24 @@ let selectedPlayers = [];
 let winnerStays = true;
 let winner;
 let playerAwards = {};
+let seasonStats = [];
 
 const toggleWinnerStaysButton = document.getElementById('toggle-game-mode');
 toggleWinnerStaysButton.onclick = toggleGameMode;
 
-fetch('http://127.0.0.1:5000/awards')
-  .then(response => response.json())
-  .then(data => { playerAwards = data; })
-  .catch(error => console.error('Error loading awards:', error));
-
-fetch('nba_player_data.csv')
-  .then(response => response.text())
-  .then(data => {
-    players = parseCSV(data);
-    displayRandomPlayers();
-    updateRankingsDisplay();
-  })
-  .catch(error => console.error('Error loading player data:', error));
+// Fix 1: Use Promise.all to ensure ALL data is loaded before rendering
+Promise.all([
+  fetch('http://127.0.0.1:5000/awards').then(res => res.json()).catch(e => { console.error('Error loading awards:', e); return {}; }),
+  fetch('nba_player_data.csv').then(res => res.text()),
+  fetch('season_averages.csv').then(res => res.text())
+]).then(([awardsData, playerData, seasonData]) => {
+  playerAwards = awardsData;
+  players = parseCSV(playerData);
+  seasonStats = parseSeasonCSV(seasonData);
+  
+  displayRandomPlayers();
+  updateRankingsDisplay();
+}).catch(error => console.error('Error loading initial data:', error));
 
 function parseCSV(data) {
   const rows = data.split('\n');
@@ -64,14 +65,6 @@ function parseCSV(data) {
     };
   });
 }
-
-let seasonStats = [];
-fetch('season_averages.csv')
-  .then(response => response.text())
-  .then(data => {
-    seasonStats = parseSeasonCSV(data);
-  })
-  .catch(error => console.error('Error loading season stats data:', error));
 
 function parseSeasonCSV(data) {
   const rows = data.split('\n');
@@ -168,12 +161,15 @@ async function getRandomPlayers() {
 }
 
 async function displayRandomPlayers(shuffle = true) {
-  const playersRow = document.getElementById('players-row');
-  playersRow.innerHTML = '';
-
+  // Fix 2: Wait for new players BEFORE clearing the DOM to prevent UI flicker
+  let nextPlayers = displayedPlayers;
   if (shuffle || displayedPlayers.length === 0) {
-    displayedPlayers = await getRandomPlayers();
+    nextPlayers = await getRandomPlayers();
   }
+  displayedPlayers = nextPlayers;
+
+  const playersRow = document.getElementById('players-row');
+  playersRow.innerHTML = ''; // Now it's safe to clear the screen
 
   displayedPlayers.forEach((player, index) => {
     const statsToShow = showCareerHighs ? {
@@ -223,8 +219,6 @@ async function displayRandomPlayers(shuffle = true) {
     unit.className = 'player-unit';
     
     // STEP 1: Mirrored layout alignment
-    // Player 1: Season Stats | Player Card
-    // Player 2: Player Card | Season Stats
     if (index === 0) {
       unit.appendChild(statsPanel);
       unit.appendChild(card);
