@@ -18,30 +18,24 @@
   </nav>
 
   <div class="container">
-
-    <!-- Player Showdown Tab -->
     <div id="player-showdown" class="tab-content active">
-
       <div id="game-mode-toggle">
-        <button id="toggle-game-mode" class="toggle-button">Disable Winner Stays</button>
+        <button id="toggle-game-mode" class="toggle-button active">Disable Winner Stays</button>
       </div>
 
-      <!-- Two player units (each = card + season stats side by side) -->
       <div id="players-row"></div>
 
-      <!-- Toggle buttons centered below -->
       <div id="toggle-buttons-wrapper"></div>
-
     </div>
 
-    <!-- ELO Rankings Tab -->
     <div id="elo-rankings" class="tab-content">
       <h2>ELO Rankings</h2>
       <input type="text" id="search-bar" placeholder="Search for a player..." oninput="filterRankings()" />
       <div id="rankings-list"></div>
     </div>
-
   </div>
+
+  <div id="hover-card-container" class="hover-card-popup"></div>
 
   <script src="script.js"></script>
 </body>

@@ -6,32 +6,29 @@ let selectedPlayers = [];
 let winnerStays = true;
 let winner;
 let playerAwards = {};
+let seasonStats = [];
 
-// Attach the event listener to the button
 const toggleWinnerStaysButton = document.getElementById('toggle-game-mode');
-toggleWinnerStaysButton.onclick = toggleGameMode; // Use the toggleGameMode function
+toggleWinnerStaysButton.onclick = toggleGameMode;
 
-// Fetch awards data from Flask
-fetch('http://127.0.0.1:5000/awards')
-  .then(response => response.json())
-  .then(data => { playerAwards = data; })
-  .catch(error => console.error('Error loading awards:', error));
+// Fix 1: Use Promise.all to ensure ALL data is loaded before rendering
+Promise.all([
+  fetch('/awards').then(res => res.json()).catch(e => { console.error('Error loading awards:', e); return {}; }),
+  fetch('/static/nba_player_data.csv').then(res => res.text()),
+  fetch('/static/season_averages.csv').then(res => res.text())
+]).then(([awardsData, playerData, seasonData]) => {
+  playerAwards = awardsData;
+  players = parseCSV(playerData);
+  seasonStats = parseSeasonCSV(seasonData);
+  
+  displayRandomPlayers();
+  updateRankingsDisplay();
+}).catch(error => console.error('Error loading initial data:', error));
 
-// Fetch player data and display random players
-fetch('/static/nba_player_data.csv')
-  .then(response => response.text())
-  .then(data => {
-    players = parseCSV(data);
-    displayRandomPlayers(); // Initial display of random players
-    updateRankingsDisplay(); // Update rankings when data is loaded
-  })
-  .catch(error => console.error('Error loading player data:', error));
-
-// Parse CSV into an array of objects
 function parseCSV(data) {
   const rows = data.split('\n');
-  const headers = rows[0].split(',').map(header => header.trim()); // Get headers from the first row
-  const dataRows = rows.slice(1).filter(row => row.trim() !== ''); // Exclude the header and empty rows
+  const headers = rows[0].split(',').map(header => header.trim());
+  const dataRows = rows.slice(1).filter(row => row.trim() !== '');
 
   const indices = headers.reduce((acc, header, index) => {
     acc[header] = index;
@@ -69,24 +66,10 @@ function parseCSV(data) {
   });
 }
 
-
-let seasonStats = []; // New variable to store the season stats
-
-// Fetch season stats data (assuming CSV format)
-fetch('/static/season_averages.csv')
-  .then(response => response.text())
-  .then(data => {
-    seasonStats = parseSeasonCSV(data); // Parse the new CSV
-    console.log("season statistics")
-    console.log(seasonStats)
-  })
-  .catch(error => console.error('Error loading season stats data:', error));
-
-// Function to parse the season stats CSV
 function parseSeasonCSV(data) {
   const rows = data.split('\n');
-  const headers = rows[0].split(',').map(header => header.trim()); // Get headers
-  const dataRows = rows.slice(1).filter(row => row.trim() !== ''); // Exclude header and empty rows
+  const headers = rows[0].split(',').map(header => header.trim());
+  const dataRows = rows.slice(1).filter(row => row.trim() !== '');
 
   const indices = headers.reduce((acc, header, index) => {
     acc[header] = index;
@@ -108,18 +91,14 @@ function parseSeasonCSV(data) {
   });
 }
 
-
-// Function to display season stats of the selected player
 function displaySeasonStats(playerName, containerDiv) {
   containerDiv.innerHTML = '';
-
   const playerSeasonStats = seasonStats.filter(stat => stat.name === playerName);
   if (playerSeasonStats.length === 0) {
     containerDiv.innerHTML = `<p class="stats-panel-title">${playerName}</p><p style="text-align:center;color:var(--text-muted);font-size:13px;">No season data available.</p>`;
     return;
   }
 
-  // Player name as panel title
   const title = document.createElement('p');
   title.className = 'stats-panel-title';
   title.textContent = playerName;
@@ -131,7 +110,6 @@ function displaySeasonStats(playerName, containerDiv) {
   statsTable.appendChild(headerRow);
 
   playerSeasonStats.forEach(stat => {
-    // Shorten "2023-24" → "23-24" to save column space
     const shortSeason = stat.season ? stat.season.slice(-5) : stat.season;
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -145,16 +123,12 @@ function displaySeasonStats(playerName, containerDiv) {
     `;
     statsTable.appendChild(row);
   });
-
   containerDiv.appendChild(statsTable);
 }
 
-
-// Build award pills for a player card — wrapping pills, one per award type
 function buildAwardsHtml(playerName) {
   const a = playerAwards[playerName];
   if (!a) return '';
-
   const pills = [];
   if (a.champion   > 0) pills.push(`<span class="award-pill champion">🏆 ${a.champion}× Ring${a.champion > 1 ? 's' : ''}</span>`);
   if (a.mvp        > 0) pills.push(`<span class="award-pill mvp">🏅 ${a.mvp}× MVP</span>`);
@@ -162,55 +136,40 @@ function buildAwardsHtml(playerName) {
   if (a.allstar    > 0) pills.push(`<span class="award-pill allstar">⭐ ${a.allstar}× All-Star</span>`);
   if (a.dpoy       > 0) pills.push(`<span class="award-pill dpoy">🛡️ ${a.dpoy}× DPOY</span>`);
   if (a.sixmoy     > 0) pills.push(`<span class="award-pill sixmoy">6️⃣ ${a.sixmoy}× 6MOY</span>`);
-
-  if (pills.length === 0) return '';
-  return `<div class="awards-row">${pills.join('')}</div>`;
+  return pills.length === 0 ? '' : `<div class="awards-row">${pills.join('')}</div>`;
 }
 
-// Function to check if an image URL is valid
 function isImageValid(url) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => resolve(true);  // Image loaded successfully
-    img.onerror = () => resolve(false);  // Image failed to load
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
     img.src = url;
   });
 }
 
-// Function to select two random players and check if their images are valid
 async function getRandomPlayers() {
   let validPlayers = [];
-
-  // If "Winner Stays" is active, add the winner to the pool
-  if (winnerStays && winner) {
-    validPlayers.push(winner); // Keep the previous winner
-  }
-
-  // Fetch new random players only if needed
+  if (winnerStays && winner) validPlayers.push(winner);
   while (validPlayers.length < 2) {
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
-
-    // Ensure no duplicates
-    if (validPlayers.some(p => p.name === randomPlayer.name)) {
-      continue;
-    }
-
+    if (validPlayers.some(p => p.name === randomPlayer.name)) continue;
     const isValid = await isImageValid(randomPlayer.headshot);
-    if (isValid) {
-      validPlayers.push(randomPlayer);
-    }
+    if (isValid) validPlayers.push(randomPlayer);
   }
-
   return validPlayers;
 }
 
 async function displayRandomPlayers(shuffle = true) {
-  const playersRow = document.getElementById('players-row');
-  playersRow.innerHTML = '';
-
+  // Fix 2: Wait for new players BEFORE clearing the DOM to prevent UI flicker
+  let nextPlayers = displayedPlayers;
   if (shuffle || displayedPlayers.length === 0) {
-    displayedPlayers = await getRandomPlayers();
+    nextPlayers = await getRandomPlayers();
   }
+  displayedPlayers = nextPlayers;
+
+  const playersRow = document.getElementById('players-row');
+  playersRow.innerHTML = ''; // Now it's safe to clear the screen
 
   displayedPlayers.forEach((player, index) => {
     const statsToShow = showCareerHighs ? {
@@ -225,7 +184,6 @@ async function displayRandomPlayers(shuffle = true) {
       OBP: player.Average_OBP, DBP: player.Average_DBP, WinShares: player.Average_Win_shares
     };
 
-    // ── Card ──────────────────────────────────────
     const card = document.createElement('div');
     card.className = 'player-card';
     card.innerHTML = `
@@ -253,21 +211,25 @@ async function displayRandomPlayers(shuffle = true) {
       </div>
     `;
 
-    // ── Season stats panel ────────────────────────
     const statsPanel = document.createElement('div');
     statsPanel.className = 'stats-panel';
     displaySeasonStats(player.name, statsPanel);
 
-    // ── Unit = card + stats side by side ──────────
     const unit = document.createElement('div');
     unit.className = 'player-unit';
-    unit.appendChild(card);
-    unit.appendChild(statsPanel);
+    
+    // STEP 1: Mirrored layout alignment
+    if (index === 0) {
+      unit.appendChild(statsPanel);
+      unit.appendChild(card);
+    } else {
+      unit.appendChild(card);
+      unit.appendChild(statsPanel);
+    }
 
     playersRow.appendChild(unit);
   });
 
-  // ── Toggle buttons ────────────────────────────
   const wrapper = document.getElementById('toggle-buttons-wrapper');
   wrapper.innerHTML = '';
 
@@ -285,14 +247,11 @@ async function displayRandomPlayers(shuffle = true) {
   wrapper.appendChild(toggleHighsButton);
 }
 
-
-// Function to toggle between regular and advanced stats
 function toggleStatsView() {
   showAdvancedStats = !showAdvancedStats;
   displayRandomPlayers(false);
 }
 
-// Function to toggle between career highs and averages
 function toggleCareerHighs() {
   showCareerHighs = !showCareerHighs;
   displayRandomPlayers(false);
@@ -301,40 +260,22 @@ function toggleCareerHighs() {
 function onPlayerSelect(selectedIndex) {
   const currentWinner = displayedPlayers[selectedIndex];
   const loser = displayedPlayers[selectedIndex === 0 ? 1 : 0];
-
   selectedPlayers = [currentWinner, loser];
 
   fetch('/update-elo', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      winnerName: currentWinner.name,
-      loserName: loser.name,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ winnerName: currentWinner.name, loserName: loser.name }),
   })
     .then(response => response.json())
-    .then(data => {
-      console.log('ELO updated successfully:', data);
-
-      // Update winner for the next round if "winner stays" mode is active
-      if (winnerStays) {
-        winner = currentWinner;
-      } else {
-        winner = null;
-      }
-
+    .then(() => {
+      winner = winnerStays ? currentWinner : null;
       selectedPlayers = [];
       displayRandomPlayers();
       updateRankingsDisplay();
     })
-    .catch(error => {
-      console.error('Error updating ELO:', error);
-      alert('Error updating ELO.');
-    });
+    .catch(error => console.error('Error updating ELO:', error));
 }
-
 
 function updateRankingsDisplay() {
   fetch('/rankings')
@@ -342,58 +283,78 @@ function updateRankingsDisplay() {
       console.log("Rankings API response:", response);
       return response.json()})
     .then(rankings => {
-      console.log('Rankings received:', rankings); // Debugging log
-
       const rankingsDiv = document.getElementById('rankings-list');
-      console.log('Rankings div:', rankingsDiv); // Check if rankingsDiv is being accessed correctly
-
-      // Clear previous rankings
       rankingsDiv.innerHTML = '';
 
-      // Check if rankings array is empty or not
       if (rankings.length === 0) {
         rankingsDiv.innerHTML = '<p>No rankings available.</p>';
         return;
       }
 
-      // Iterate through rankings and create HTML
       rankings.forEach((player, index) => {
         const playerDiv = document.createElement('div');
         playerDiv.className = `ranking-player ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`;
 
-        let medalIcon = '';
-        let goatIcon = '';
+        // STEP 5: ELO Rank Hover Events
+        playerDiv.onmouseenter = (e) => showHoverCard(player[0], e);
+        playerDiv.onmouseleave = hideHoverCard;
 
-        if (index === 0) {
-          goatIcon = '<span class="goat">🐐</span>';
-        } else if (index === 1) {
-          medalIcon = '<span class="medal second">🥈</span>';
-        } else if (index === 2) {
-          medalIcon = '<span class="medal third">🥉</span>';
-        }
+        let medalIcon = index === 0 ? '<span class="goat">🐐</span>' : 
+                        index === 1 ? '<span class="medal second">🥈</span>' : 
+                        index === 2 ? '<span class="medal third">🥉</span>' : '';
 
         playerDiv.innerHTML = `
           <div class="player-ranking">
             <div class="player-info">
-              <h3><span class="rank-number">${index + 1}.</span> ${goatIcon}${medalIcon}${player[0]}</h3>
+              <h3><span class="rank-number">${index + 1}.</span> ${medalIcon}${player[0]}</h3>
               <p>ELO: ${player[1].toFixed(0)}</p>
             </div>
           </div>
         `;
-
         rankingsDiv.appendChild(playerDiv);
       });
     })
     .catch(error => console.error('Error fetching rankings:', error));
 }
 
-function toggleGameMode() {
-  winnerStays = !winnerStays; // Toggle mode
-  winner = null; // Reset winner when switching modes
+// Hover Popup Logic
+function showHoverCard(playerName, event) {
+  const player = players.find(p => p.name === playerName);
+  if (!player) return;
 
-  // Update button text dynamically
+  const hoverContainer = document.getElementById('hover-card-container');
+  hoverContainer.innerHTML = `
+    <div class="player-card" style="margin:0; box-shadow: var(--shadow-lg);">
+      <div class="card-content">
+        <img src="${player.headshot}" alt="${player.name}" class="headshot" style="width:120px; height:auto;">
+        <h2 style="font-size:14px;">${player.name}</h2>
+        ${buildAwardsHtml(player.name)}
+        <div class="card-stats">
+            <p><strong>PPG:</strong> ${player.avg_ppg.toFixed(1)}</p>
+            <p><strong>APG:</strong> ${player.avg_apg.toFixed(1)}</p>
+            <p><strong>RPG:</strong> ${player.avg_rpg.toFixed(1)}</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  hoverContainer.style.display = 'block';
+  hoverContainer.style.top = (event.pageY + 10) + 'px';
+  hoverContainer.style.left = (event.pageX + 20) + 'px';
+}
+
+function hideHoverCard() {
+  document.getElementById('hover-card-container').style.display = 'none';
+}
+
+function toggleGameMode() {
+  winnerStays = !winnerStays;
+  winner = null;
   const toggleButton = document.getElementById('toggle-game-mode');
   toggleButton.innerText = winnerStays ? 'Disable Winner Stays' : 'Enable Winner Stays';
+  
+  // STEP 3: Make the button turn black when clicked
+  toggleButton.classList.toggle('active', winnerStays);
 }
 
 function filterRankings() {
@@ -403,31 +364,14 @@ function filterRankings() {
 
   rankingPlayers.forEach((player) => {
     const playerName = player.querySelector('h3').textContent.toLowerCase();
-    if (playerName.includes(searchQuery)) {
-      player.style.display = 'flex'; // Show matching players
-    } else {
-      player.style.display = 'none'; // Hide non-matching players
-    }
+    player.style.display = playerName.includes(searchQuery) ? 'flex' : 'none';
   });
 }
 
-// Switch between tabs
 function switchTab(tabName) {
-  // Hide all tab content
-  const tabs = document.querySelectorAll('.tab-content');
-  tabs.forEach(tab => tab.classList.remove('active'));
-
-  // Show the selected tab
-  const activeTab = document.getElementById(tabName);
-  activeTab.classList.add('active');
-
-  // Update the active tab link
-  const links = document.querySelectorAll('nav a');
-  links.forEach(link => link.classList.remove('active'));
-  
-  // Activate the clicked tab link
-  const activeLink = document.querySelector(`a[href='#'][onclick="switchTab('${tabName}')"]`);
-  if (activeLink) {
-    activeLink.classList.add('active');
-  }
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  document.querySelectorAll('nav a').forEach(link => link.classList.remove('active'));
+  const activeLink = document.querySelector(`a[onclick="switchTab('${tabName}')"]`);
+  if (activeLink) activeLink.classList.add('active');
 }
